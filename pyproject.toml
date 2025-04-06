@@ -1,0 +1,44 @@
+[project]
+name = "mcr"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "yforest-osaka",email = "mori.yusei@gmail.com"}
+]
+readme = "README.md"
+packages = [
+    { include = "mcr" },
+]
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+qulacs = "^0.6.4.1"
+qiskit = "^1.2.0"
+pyzx = "^0.8.0"
+pandas = "^2.2.2"
+numpy = "1.26.4"
+matplotlib = "^3.9.2"
+qulacsvis = "^0.7.3"
+seaborn = "^0.13.2"
+pytket = "^1.32.0"
+pytest = "^8.3.2"
+joblib = "^1.4.2"
+natsort = "^8.4.0"
+tqdm = "^4.66.5"
+ipykernel = "^6.29.5"
+pylatexenc = "^2.10"
+qiskit-ibm-runtime = "^0.31.0"
+qiskit-aer = "^0.15.1"
+qnexus = "^0.7.0"
+mqt-qcec = "^2.8.0"
+numba = "^0.60.0"
+snakeviz = "^2.2.2"
+pybind11 = "^2.13.6"
+stim = "^1.14.0"
+pdf2image = "^1.17.0"
+staq = "^0.1.20"
+timeout-decorator = "^0.5.0"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
