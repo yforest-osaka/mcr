@@ -180,7 +180,7 @@ def rot_unoptimization(circuit, iteration, with_swap_option):
     return circuit
 
 
-class RotationCircuit:
+class PauliRotationSequence:
     def __init__(self, n_qubit: int) -> None:
         """Initializes a quantum program with a specified number of qubits.
 
@@ -205,6 +205,9 @@ class RotationCircuit:
         self.__gate_list: Appends the gate_id and gate as a tuple.
         self.index_distribution: Increments the count for each index in the gate's target index list.
         """
+        if isinstance(gate, str):
+            gate = stim.PauliString(gate)
+
         assert isinstance(gate, stim.PauliString), "The gate must be an instance of a stim.PauliString."
         pauli_string_length = len(gate)
         diff = self.__n_qubit - pauli_string_length
@@ -308,10 +311,11 @@ class RotationCircuit:
                         else:
                             datalist.append(data)
                             positions.append(i)
-        if include_position:
-            return datalist, positions
-        else:
-            return datalist
+        # if include_position:
+        #     return datalist, positions
+        # else:
+        #     return datalist
+        return sorted(datalist, key=lambda x: x[0])
 
     def get_all_ids(self) -> List[tuple[int]]:
         """全てのゲートのIDを取得するメソッド
@@ -452,14 +456,14 @@ class RotationCircuit:
             m2 = get_merged_matrix(qulacs_circuit2)
             return are_unitaries_equivalent(m1, m2)
 
-    def duplicate(self) -> "RotationCircuit":
+    def duplicate(self) -> "PauliRotationSequence":
         """量子回路を複製するメソッド
 
         Returns:
-            RotationCircuit: 複製された量子回路
+            PauliRotationSequence: 複製された量子回路
         """
-        tmp_circ = RotationCircuit(self.__n_qubit)
-        tmp_circ.__gate_list = self.__gate_list.copy()  # gate_listのコピー
+        tmp_circ = PauliRotationSequence(self.__n_qubit)
+        tmp_circ.__gate_list = copy.deepcopy(self.__gate_list)  # gate_listのコピー
         tmp_circ.index_distribution = copy.deepcopy(self.index_distribution)  # index_distributionのcopy
         tmp_circ.del_nums = self.del_nums.copy()  # del_numsのコピー
         return tmp_circ

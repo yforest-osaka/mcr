@@ -31,7 +31,7 @@ from mcr.mycircuit import MyQuantumProgram, get_gate_info
 from mcr.pyzxfunc import *
 from mcr.rot_class import RotOps
 from mcr.rotation_circuit import (
-    RotationCircuit,
+    PauliRotationSequence,
     process_gate_replacement,
     rot_unoptimization,
 )
@@ -145,7 +145,7 @@ def get_benchmark_result(
     #########################################
 
     ### stim-rotation baseのunoptimization ###
-    circuit = RotationCircuit(nqubits)
+    circuit = PauliRotationSequence(nqubits)
     initial_pauli_string = "Z" * nqubits
     circuit.add_gate((0,), stim.PauliString(f"+{initial_pauli_string}"))
     # circuit.add_gate((1,), stim.PauliString(f"-{initial_pauli_string}"))
