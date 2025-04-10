@@ -169,8 +169,8 @@ def get_benchmark_result(
     if insert_nontrivial_clifford:
         filepath_u = f"{qasm_folder_path}/u_nontrivial_{sample_idx}.qasm"
         filepath_v = f"{qasm_folder_path}/v_nontrivial_{sample_idx}.qasm"
-        filepath_u_qc = f"{qc_folder_path}/u_nontrivial_n_{nqubit}_k_{unopt_iteration}_{sample_idx}.qc"
-        filepath_v_qc = f"{qc_folder_path}/v_nontrivial_n_{nqubit}_k_{unopt_iteration}_{sample_idx}.qc"
+        filepath_u_qc = f"{qc_folder_path}/u_nontrivial_n_{nqubits}_k_{unopt_iteration}_{sample_idx}.qc"
+        filepath_v_qc = f"{qc_folder_path}/v_nontrivial_n_{nqubits}_k_{unopt_iteration}_{sample_idx}.qc"
     else:
         filepath_u = f"{qasm_folder_path}/u_{sample_idx}_{uuid4()}.qasm"
         filepath_v = f"{qasm_folder_path}/v_{sample_idx}_{uuid4()}.qasm"
