@@ -33,7 +33,7 @@ from mcr.rot_class import RotOps
 from mcr.rotation_circuit import (
     PauliRotationSequence,
     process_gate_replacement,
-    rot_unoptimization,
+    unoptimize_circuit,
 )
 from mcr.stim_function import (
     rot_ops_to_stim,
@@ -152,7 +152,7 @@ def get_benchmark_result(
     circuit_initial = circuit.duplicate()
 
     # Perform unoptimization
-    unopt_circuit = rot_unoptimization(circuit, unopt_iteration, with_swap_option)
+    unopt_circuit = unoptimize_circuit(circuit, unopt_iteration, with_swap_option)
     if unopt_circuit == "Nothing":
         return False
     u = circuit_initial.set_circuit()

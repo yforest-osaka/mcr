@@ -161,7 +161,7 @@ def process_gate_replacement(circuit, base_id, base_gate, gate_ids, nqubits, wit
         return "Nothing"
 
 
-def rot_unoptimization(circuit, iteration, with_swap_option):
+def unoptimize_circuit(circuit, iteration, with_swap_option):
     """
     Perform rotational unoptimization on the circuit for a given number of iterations.
     """
