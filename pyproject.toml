@@ -14,7 +14,6 @@ python = ">=3.11,<3.12"
 qulacs = "^0.6.4.1"
 qiskit = "^1.2.0"
 pyzx = "^0.8.0"
-pandas = "^2.2.2"
 numpy = "1.26.4"
 matplotlib = "^3.9.2"
 qulacsvis = "^0.7.3"
@@ -37,6 +36,8 @@ stim = "^1.14.0"
 pdf2image = "^1.17.0"
 staq = "^0.1.20"
 timeout-decorator = "^0.5.0"
+pandas = "<2.2.0"
+scipy = "1.14.1"
 
 
 [build-system]
