@@ -4,24 +4,7 @@ from tqdm import tqdm
 from mcr.rot_class import RotOps
 
 
-def identity_to_under_score(pauli_string):
-    values = pauli_string.replace("I", "_")
-    return "".join(values)
-
-
-# PauliStringをstimの言葉に変換する
-def rot_ops_to_stim(rot_ops):
-    original_pauli_string = rot_ops.get_pauli_strings()
-    original_sgn = rot_ops.get_sgn_angles()
-    stim_pauli_string = []
-    for original_pauli_string, original_sgn in zip(original_pauli_string, original_sgn):
-        tmp_string = identity_to_under_score(original_pauli_string)
-        sign = "+" if original_sgn > 0 else "-"
-        stim_pauli_string.append(stim.PauliString(f"{sign}{tmp_string}"))
-    return stim_pauli_string
-
-
-def stim_apply_pauli_gates(circuit, qubit_indices, pauli_ids, right_side=False):
+def apply_pauli_gates(circuit, qubit_indices, pauli_ids, right_side=False):
     """指定された量子ビットに対してPauliゲートを適用"""
     # print(qubit_indices, pauli_ids)
     pauli_ids = pauli_ids[1:]  # 先頭は符号の情報なので除外
@@ -39,7 +22,7 @@ def stim_apply_pauli_gates(circuit, qubit_indices, pauli_ids, right_side=False):
                 circuit.append("H", [idx])
 
 
-def stim_conversion_from_pauli_to_circuit(stim_pauli):
+def conversion_from_pauli_to_circuit(stim_pauli):
     # 多分ここが違う
     sgn = stim_pauli.sign
     # Pauli演算子が入っているqubitのindexを取得
@@ -47,7 +30,9 @@ def stim_conversion_from_pauli_to_circuit(stim_pauli):
     position = max(non_identity_pauli_indices)  # 最後の非ゼロのindex
     circuit = stim.Circuit()
 
-    stim_apply_pauli_gates(circuit, non_identity_pauli_indices, str(stim_pauli), right_side=False)
+    apply_pauli_gates(
+        circuit, non_identity_pauli_indices, str(stim_pauli), right_side=False
+    )
     if len(non_identity_pauli_indices) >= 2:  # CNOT必要
         # print("non_identity_pauli: ", non_identity_pauli_indices)
 
@@ -69,7 +54,9 @@ def stim_conversion_from_pauli_to_circuit(stim_pauli):
                 circuit.append("CNOT", [idx, position])
 
     # Pauliゲートを逆順に適用
-    stim_apply_pauli_gates(circuit, non_identity_pauli_indices, str(stim_pauli), right_side=True)
+    apply_pauli_gates(
+        circuit, non_identity_pauli_indices, str(stim_pauli), right_side=True
+    )
     return circuit
 
 
@@ -89,38 +76,34 @@ def get_rotation_relation(pauli_string_1, pauli_string_2):
 
 # 持っているClifford circuitを元にPauli stringを更新する
 def clifford_update(clifford_circuit, stim_pauli_str):
-    # print(f"clifford updated!!: {stim_pauli_str}")
-    # print(f"circuit: {clifford_circuit}")
-
-    # inv = clifford_circuit.inverse()
-    # tmp = stim_pauli_str.after(clifford_circuit)
-    # return tmp.before(inv)
     new_val = stim_pauli_str.after(clifford_circuit)
-    # print(f"after :{new_val}")
     return new_val
 
 
-def optimization_process(target_str: stim.PauliString, data_all: list[stim.PauliString]):
+def optimization_process(
+    target_str: stim.PauliString, data_all: list[stim.PauliString]
+):
     for i, ele in enumerate(reversed(data_all)):
         relation = get_rotation_relation(target_str, ele)
         if relation == "commute":
             continue
         elif relation == "anti-commute":
-            # print("Anti-commute!!")
             return "Nothing"
         elif relation == "zero":
-            # print("Delete_zero!", len(data_all) - i - 1, ele)
-            # print(len(data_all))
-            data_all = [data_all[j] for j in range(len(data_all)) if j != len(data_all) - i - 1]
+            data_all = [
+                data_all[j] for j in range(len(data_all)) if j != len(data_all) - i - 1
+            ]
             # print(len(data_all))
             return data_all
         elif relation in {"plus_clifford", "minus_clifford"}:
             # print("Delete_for_clifford!!", len(data_all) - i - 1, ele)
             # print(data_all)
-            data_all = [data_all[j] for j in range(len(data_all)) if j != len(data_all) - i - 1]
+            data_all = [
+                data_all[j] for j in range(len(data_all)) if j != len(data_all) - i - 1
+            ]
             # print(data_all)
             # print(f"be clifford: {target_str}")
-            new_clifford_circuit = stim_conversion_from_pauli_to_circuit(
+            new_clifford_circuit = conversion_from_pauli_to_circuit(
                 target_str
             )  # mergeされたPauliRotationを追加する機構が必要！
             return data_all, new_clifford_circuit
@@ -192,7 +175,9 @@ def stim_grouping_of_pauli_rotations(stim_data_lst, joint=False):
                 # 既存のグループに追加
                 L[j].append(Rp)
     if joint:
-        return [item for sublist in L for item in sublist]  # Lの全要素をフラットにして返す
+        return [
+            item for sublist in L for item in sublist
+        ]  # Lの全要素をフラットにして返す
     else:
         return L
 
@@ -213,7 +198,9 @@ def zhang_optimization(stim_data_lst):
             # すでにappendされているPauliRotationとの関係を調べる
             # print(optimized_rotations[0])
             value = optimization_process(ele, optimized_rotations)
-            if len(value) == 2 and isinstance(value, tuple):  # +pi/2 or -pi/2のClifford circuitが新たに生成された場合
+            if len(value) == 2 and isinstance(
+                value, tuple
+            ):  # +pi/2 or -pi/2のClifford circuitが新たに生成された場合
                 # print(value)
                 # print('Clifford Merged!')
                 # print('Bef',len(optimized_rotations))
@@ -239,7 +226,9 @@ def zhang_optimization(stim_data_lst):
     return optimized_rotations, clifford_circuit
 
 
-def zhang_optimization_until_convergence(nqubits, stim_data_lst, with_grouping_t_layers=False, with_process=False):
+def zhang_optimization_until_convergence(
+    nqubits, stim_data_lst, with_grouping_t_layers=False, with_process=False
+):
     length = len(stim_data_lst)
     # print(length)
     clifford_data = []
@@ -268,7 +257,9 @@ def zhang_optimization_until_convergence(nqubits, stim_data_lst, with_grouping_t
                 combined_clifford_circuit += circuit
                 for j in range(i):
                     target_non_cliffords = opt_rots_lst[j]
-                    opt_rots_lst[j] = [ele.after(circuit) for ele in target_non_cliffords]
+                    opt_rots_lst[j] = [
+                        ele.after(circuit) for ele in target_non_cliffords
+                    ]
             clifford_circuit = combined_clifford_circuit
             optimized_rotations = [
                 item for sublist in opt_rots_lst for item in sublist

@@ -1,34 +1,38 @@
-import numpy as np
 import random
+
+import numpy as np
 import stim
+
 from mcr.circuit_ops import assign_gate_id_of_generated_gates
 
+
 def generate_random_pauli_string(num_qubits: int) -> stim.PauliString:
-    """指定した量子ビット数のランダムなPauliStringを生成する関数。
+    """Function to generate a random PauliString for the specified number of qubits.
 
     Args:
-        num_qubits (int): 量子ビット数
+        num_qubits (int): Number of qubits
 
     Returns:
-        stim.PauliString: ランダムに生成されたPauliString
+        stim.PauliString: Randomly generated PauliString
     """
     assert num_qubits >= 2, "num_qubits must be greater than or equal to 2."
-    # Pauli演算子の候補
+    # Candidates for Pauli operators
     paulis = ["I", "X", "Y", "Z"]
 
     flag = True
     while flag:
-        # ランダムにPauli演算子を選択
+        # Randomly select Pauli operators
         random_paulis = [random.choice(paulis) for _ in range(num_qubits)]
         join_paulis = "".join(random_paulis)
         if join_paulis not in ["I" * num_qubits]:
             flag = False
     sgn = random.choice(["+", "-"])
-    # PauliStringを生成
+    # Generate PauliString
     return stim.PauliString(sgn + join_paulis)
 
 
 def gen_nontrivial_identity(nqubits):
+    """Generate a set of Pauli operators that form a non-trivial identity."""
     pauli_a = generate_random_pauli_string(nqubits)
     flag_b = True
     while flag_b:
@@ -41,7 +45,16 @@ def gen_nontrivial_identity(nqubits):
         if not pauli_a.commutes(pauli_c) and not pauli_b.commutes(pauli_c):
             flag_c = False
     pauli_d = -1 * pauli_a * pauli_b * pauli_c
-    return [pauli_a, pauli_b, pauli_c, pauli_d, -1 * pauli_a, -1 * pauli_b, -1 * pauli_c, -1 * pauli_d]
+    return [
+        pauli_a,
+        pauli_b,
+        pauli_c,
+        pauli_d,
+        -1 * pauli_a,
+        -1 * pauli_b,
+        -1 * pauli_c,
+        -1 * pauli_d,
+    ]
 
 
 def is_edge(index, gate_id_list):
@@ -51,7 +64,9 @@ def is_edge(index, gate_id_list):
     return index == len(gate_id_list) - 1
 
 
-def gen_nontrivial_identity_from_gate_info(nqubits, left_gate, right_gate=None, with_swap_option=True):
+def gen_nontrivial_identity_from_gate_info(
+    nqubits, left_gate, right_gate=None, with_swap_option=True
+):
     """
     Generate a non-trivial identity gate and optionally include Swap operations.
     Retries up to max_trial times if conditions are not met.
@@ -59,9 +74,15 @@ def gen_nontrivial_identity_from_gate_info(nqubits, left_gate, right_gate=None, 
     max_trial = 1000
     for _ in range(max_trial):
         gates = gen_nontrivial_identity(nqubits)
-        commutes_conditions = [left_gate.commutes(gates[0]), left_gate.commutes(gates[1])]
+        commutes_conditions = [
+            left_gate.commutes(gates[0]),
+            left_gate.commutes(gates[1]),
+        ]
         if right_gate:
-            commutes_conditions += [right_gate.commutes(gates[-1]), right_gate.commutes(gates[-2])]
+            commutes_conditions += [
+                right_gate.commutes(gates[-1]),
+                right_gate.commutes(gates[-2]),
+            ]
         if not any(commutes_conditions):
             break
     else:
@@ -83,11 +104,18 @@ def gen_nontrivial_identity_from_gate_info(nqubits, left_gate, right_gate=None, 
             + [-1 * right_additional_gate]
         )
     else:
-        result_gates = [-1 * left_additional_gate] + gates[:2] + [left_additional_gate, left_gate] + gates[2:]
+        result_gates = (
+            [-1 * left_additional_gate]
+            + gates[:2]
+            + [left_additional_gate, left_gate]
+            + gates[2:]
+        )
     return result_gates
 
 
-def process_gate_replacement(circuit, base_id, base_gate, gate_ids, nqubits, with_swap_option):
+def process_gate_replacement(
+    circuit, base_id, base_gate, gate_ids, nqubits, with_swap_option
+):
     """
     Handles the deletion of the target gate and adds the generated gates to the circuit.
     """
@@ -100,7 +128,10 @@ def process_gate_replacement(circuit, base_id, base_gate, gate_ids, nqubits, wit
             right_gate_id = gate_ids[left_position + 1]
             right_gate = circuit.get_gate_from_gate_id(right_gate_id)
             target_gates = gen_nontrivial_identity_from_gate_info(
-                nqubits, left_gate=base_gate, right_gate=right_gate, with_swap_option=with_swap_option
+                nqubits,
+                left_gate=base_gate,
+                right_gate=right_gate,
+                with_swap_option=with_swap_option,
             )
         else:  # Edge gate
             target_gates = gen_nontrivial_identity_from_gate_info(
@@ -136,7 +167,9 @@ def unoptimize_circuit(circuit, iteration, with_swap_option):
                 break
         base_id, base_gate = circuit[seed]
         gate_ids = sorted(circuit.get_all_ids())
-        circuit = process_gate_replacement(circuit, base_id, base_gate, gate_ids, nqubits, with_swap_option)
+        circuit = process_gate_replacement(
+            circuit, base_id, base_gate, gate_ids, nqubits, with_swap_option
+        )
         if isinstance(circuit, str):
             return "Nothing"
     return circuit
