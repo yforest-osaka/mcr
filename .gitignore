@@ -5,5 +5,7 @@
 results/*
 circuit_data/*
 .*qasm
+paper_mcr/*
 quantum-circuit-optimization/*
 input_data/*
+external_data/*
