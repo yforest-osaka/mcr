@@ -1,10 +1,11 @@
-import sys
 import collections
+import sys
 
 call_counts = collections.Counter()
 
+
 def trace_calls(frame, event, arg):
-    if event != 'call':
+    if event != "call":
         return
 
     code = frame.f_code
@@ -13,20 +14,23 @@ def trace_calls(frame, event, arg):
 
     # 除外条件
     if (
-        func_name.startswith('_') or 
-        func_name.startswith('<') or 
-        filename.startswith('<') or  # ← これを追加
-        "site-packages" in filename or 
-        "lib/python" in filename
+        func_name.startswith("_")
+        or func_name.startswith("<")
+        or filename.startswith("<")  # ← これを追加
+        or "site-packages" in filename
+        or "lib/python" in filename
     ):
         return
 
     call_counts[(func_name, filename)] += 1
     return trace_calls
 
+
 def analyze_main():
     import main  # 実行対象の main.py
+
     main.main()
+
 
 if __name__ == "__main__":
     sys.settrace(trace_calls)

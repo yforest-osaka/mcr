@@ -1,8 +1,6 @@
 import stim
 from tqdm import tqdm
 
-from mcr.rot_class import RotOps
-
 
 def apply_pauli_gates(circuit, qubit_indices, pauli_ids, right_side=False):
     """指定された量子ビットに対してPauliゲートを適用"""

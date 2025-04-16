@@ -9,7 +9,7 @@ def main():
     with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
     # unopt_iteration_count = nqubits ** 2
-    unopt_iteration_count = 5
+    unopt_iteration_count = 10
 
     # Define the input circuit using the PauliRotationSequence class.
     #

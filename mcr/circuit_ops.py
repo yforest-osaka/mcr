@@ -1,44 +1,13 @@
-import copy
 import os
-import random
 import re
-from itertools import product
 from uuid import uuid4
 
-import numpy as np
-import pandas as pd
-import pyzx as zx
 from mqt import qcec
 from mqt.qcec.configuration import augment_config_from_kwargs
 from mqt.qcec.pyqcec import Configuration
 from qulacs import QuantumCircuit
-from qulacs.circuit import QuantumCircuitOptimizer as QCO  # type: ignore
-from qulacs.gate import (  # type: ignore
-    CNOT,
-    RZ,
-    DenseMatrix,
-    H,
-    Identity,
-    ParametricPauliRotation,
-    ParametricRZ,
-    RandomUnitary,
-    S,
-    Sdag,
-    T,
-    Tdag,
-    X,
-    Y,
-    Z,
-)
-from qulacs_core import (
-    ClsOneControlOneTargetGate,
-    ClsOneQubitGate,
-    QuantumGate_SingleParameter,
-)
-from tqdm import tqdm
 
 from mcr.filesave import qulacs_to_qasm
-from mcr.mycircuit import GateFactory, MyQuantumProgram, get_gate_info
 
 
 def assign_gate_id_of_generated_gates(gate_lst, base_id):

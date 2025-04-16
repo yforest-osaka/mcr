@@ -12,7 +12,7 @@ from pytket.passes import RemoveRedundancies
 from pytket.qasm import circuit_from_qasm
 
 from mcr.filesave import mkdir_tmp_if_not_exists, qasm_file_to_qc, qasm_to_pyzx
-from mcr.stim_function import zhang_optimization_until_convergence
+from mcr.tmerge_function import zhang_optimization_until_convergence
 
 
 def result_lists_to_dataframe(*result_list):
