@@ -6,17 +6,17 @@ from qulacs.converter import convert_qulacs_circuit_to_QASM
 
 
 def mkdir_tmp_if_not_exists():
+    """Create the 'tmp' directory if it does not exist"""
     if not os.path.exists("tmp"):
-        # Create the 'tmp' directory if it does not exist
         os.makedirs("tmp")
 
 
 def qulacs_to_qasm(filepath: str, qulacs_circ: QuantumCircuit) -> None:
-    """QulacsのQuantumCircuitをQASMファイルに保存
+    """Save a Qulacs QuantumCircuit to a QASM file
 
     Args:
-        filepath (str): 保存先のファイルパス
-        qulacs_circ (QuantumCircuit): 保存するQulacsのQuantumCircuit
+        filepath (str): Path to save the file
+        qulacs_circ (QuantumCircuit): Qulacs QuantumCircuit to save
     """
     string = convert_qulacs_circuit_to_QASM(qulacs_circ)
     with open(filepath, mode="w") as f:
@@ -24,23 +24,23 @@ def qulacs_to_qasm(filepath: str, qulacs_circ: QuantumCircuit) -> None:
 
 
 def qasm_to_pyzx(filepath: str) -> zx.Circuit:
-    """QASMファイルをPyZXのCircuitに変換
+    """Convert a QASM file to a PyZX Circuit
 
     Args:
-        filepath (str): QASMファイルのパス
+        filepath (str): Path to the QASM file
 
     Returns:
-        zx.Circuit: PyZXのCircuit
+        zx.Circuit: PyZX Circuit
     """
     return zx.Circuit.load(filepath)
 
 
 def qasm_file_to_qc(input_file: str, output_file: str) -> None:
-    """QASMファイルをQCファイルに変換(PyZX経由)
+    """Convert a QASM file to a QC file (via PyZX)
 
     Args:
-        input_file (str): QASMファイルのパス
-        output_file (str): QCファイルのパス
+        input_file (str): Path to the QASM file
+        output_file (str): Path to the QC file
     """
 
     input_circuit = zx.Circuit.from_qasm_file(input_file)

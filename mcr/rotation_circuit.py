@@ -294,7 +294,7 @@ class PauliRotationSequence:
 
     def is_equivalent(self, another_circuit) -> float:
         """2つの量子回路が等価かどうかを判定するメソッド"""
-        from mcr.circuit_ops import equivalence_check_via_mqt_qcec
+        from mcr.equiv_check import equivalence_check_via_mqt_qcec
 
         qulacs_circuit1 = self.set_circuit()
         qulacs_circuit2 = another_circuit.set_circuit()
@@ -304,7 +304,7 @@ class PauliRotationSequence:
         ):
             return True
         else:
-            from mcr.circuit_ops import are_unitaries_equivalent, get_merged_matrix
+            from mcr.equiv_check import are_unitaries_equivalent, get_merged_matrix
 
             m1 = get_merged_matrix(qulacs_circuit1)
             m2 = get_merged_matrix(qulacs_circuit2)
