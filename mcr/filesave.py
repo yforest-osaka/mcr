@@ -17,6 +17,12 @@ from qulacs.converter import (
 from tqdm import tqdm
 
 
+def mkdir_tmp_if_not_exists():
+    if not os.path.exists("tmp"):
+        # Create the 'tmp' directory if it does not exist
+        os.makedirs("tmp")
+
+
 def string_to_qasm(filepath: str, string: str, join_option: bool = True) -> None:
     """文字列をQASMファイルに保存
 
@@ -157,9 +163,11 @@ def qulacs_to_pyzx(qulacs_circ: QuantumCircuit) -> zx.Circuit:
     Returns:
         zx.Circuit: PyZXのCircuit
     """
-    if not os.path.exists("tmp"):
-        # Create the 'tmp' directory if it does not exist
-        os.makedirs("tmp")
+    # if not os.path.exists("tmp"):
+    #     # Create the 'tmp' directory if it does not exist
+    #     os.makedirs("tmp")
+    mkdir_tmp_if_not_exists()
+    
     id = uuid.uuid4()
     qulacs_to_qasm(f"tmp/{id}.qasm", qulacs_circ)
     pyzx_circ = qasm_to_pyzx(f"tmp/{id}.qasm")

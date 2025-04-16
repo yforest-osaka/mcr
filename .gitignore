@@ -1,7 +1,9 @@
 .DS_Store
 **/__pycache__/**
-.vscode/**
-.venv/**
+.vscode/*
+.venv/*
+results/*
+circuit_data/*
 .*qasm
 quantum-circuit-optimization/*
 input_data/*

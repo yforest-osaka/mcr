@@ -32,6 +32,8 @@ from mcr.pyzxfunc import *
 from mcr.rot_class import RotOps
 from mcr.rotation_circuit import (
     PauliRotationSequence,
+)
+from mcr.unoptimize import (
     process_gate_replacement,
     unoptimize_circuit,
 )

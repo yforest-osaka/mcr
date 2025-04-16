@@ -2385,6 +2385,18 @@ qa = ["flake8 (==5.0.4)", "mypy (==0.971)", "types-setuptools (==67.2.0.1)"]
 testing = ["docopt", "pytest"]
 
 [[package]]
+name = "pathlib"
+version = "1.0.1"
+description = "Object-oriented filesystem paths"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "pathlib-1.0.1-py3-none-any.whl", hash = "sha256:f35f95ab8b0f59e6d354090350b44a80a80635d22efdedfa84c7ad1cf0a74147"},
+    {file = "pathlib-1.0.1.tar.gz", hash = "sha256:6940718dfc3eff4258203ad5021090933e5c04707d5ca8cc9e73c94a7894ea9f"},
+]
+
+[[package]]
 name = "pbr"
 version = "6.1.1"
 description = "Python Build Reasonableness"
@@ -4717,4 +4729,4 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "52f0de76de97b81eb47f9fe034a02adb22a42427957bc426475e6c364d71912b"
+content-hash = "a7516cf286a68ab87e8bf550bc65cf28c1ef8061f74c17d80c13c826980f42ce"
