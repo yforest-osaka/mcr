@@ -1,16 +1,19 @@
 # 基本ライブラリ
 import collections
 import copy
+import math
 from typing import List
 
 # プロット
 import matplotlib.pyplot as plt
+import numpy as np
 import stim
 
 # Qulacs関連
 from qulacs import QuantumCircuit
 from qulacs.circuit import QuantumCircuitOptimizer as QCO  # type: ignore
 from qulacs.converter import convert_qulacs_circuit_to_QASM
+from qulacs.gate import CNOT, H, Identity, PauliRotation, S, Sdag, T, Tdag, X, Y, Z
 from qulacsvis import circuit_drawer as draw
 
 
@@ -289,7 +292,7 @@ class PauliRotationSequence:
         t = len(self.sort_gate_sequence())
         return t
 
-    def is_equivalent(self, another_circuit: "MyQuantumProgram") -> float:
+    def is_equivalent(self, another_circuit) -> float:
         """2つの量子回路が等価かどうかを判定するメソッド"""
         from mcr.circuit_ops import equivalence_check_via_mqt_qcec
 
@@ -351,16 +354,23 @@ class PauliRotationSequence:
             f.write("\n".join(string))
 
 
-# N qubit Pauli Rotation Class
-import math
-from collections import Counter
+def complement_identity(circuit: QuantumCircuit) -> QuantumCircuit:
+    """一個もゲートがないqubit_indexが存在する場合飲みIdentityゲートを追加する
 
-import numpy as np
-from qulacs import QuantumCircuit
-from qulacs.gate import CNOT, H, PauliRotation, S, Sdag, T, Tdag, X, Y, Z
-from qulacsvis import circuit_drawer
+    Args:
+        circuit (QuantumCircuit): Qulacsの回路
 
-from mcr.clifford import complement_identity
+    Returns:
+        QuantumCircuit: Identityゲートを追加した回路
+    """
+    indices = []
+    for i in range(circuit.get_gate_count()):
+        indices += circuit.get_gate(i).get_target_index_list()
+        indices += circuit.get_gate(i).get_control_index_list()
+    for num in range(circuit.get_qubit_count()):
+        if num not in indices:
+            circuit.add_gate(Identity(num))
+    return circuit
 
 
 def pauli_bit_to_pauli_id(pauli_bit, with_coef=True):
@@ -489,10 +499,6 @@ class RotOps:
                 self.__pauli_bits = [
                     pauli_string_to_pauli_bit(ele) for ele in gate_sequence
                 ]
-            else:  # [[0,0], [1,1], [0,0], [2,2]]
-                self.__pauli_bits = [
-                    pauli_id_to_pauli_bit(ele) for ele in gate_sequence
-                ]
             self.__angles = [0 for _ in range(len(gate_sequence))]
 
     def get_pauli_bits(self):
@@ -568,8 +574,6 @@ class RotOps:
         new_value, new_angle = value_lst
         if isinstance(new_value, str):  # ["II", "XX", "II", "YY"]
             self.__pauli_bits[index] = pauli_string_to_pauli_bit(new_value)
-        else:  # [[0,0], [1,1], [0,0], [2,2]]
-            self.__pauli_bits[index] = pauli_id_to_pauli_bit(new_value)
         self.__angles[index] = new_angle
 
     def get_all(self):
