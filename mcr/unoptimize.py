@@ -6,9 +6,9 @@ import stim
 
 def assign_gate_id_of_generated_gates(gate_lst, base_id):
     gates = []
-    # 新しく生成されたゲートに割り当てるgate idを作る
+    # Create gate IDs to assign to the newly generated gates
     base_gate_id = list(base_id)
-    for i, gate in enumerate(gate_lst):  # \tilde{Udagger}とAを入れる
+    for i, gate in enumerate(gate_lst):  # Insert \tilde{Udagger} and A
         generated_gate_id = tuple(base_gate_id + [i])
         gates.append((generated_gate_id, gate))
     return gates

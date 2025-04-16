@@ -12,23 +12,23 @@ from mcr.filesave import qulacs_to_qasm
 
 def get_qubit_count_from_qasm_file(filepath):
 
-    # ファイルを読み込む
+    # Read the file
     with open(filepath, "r") as file:
         content = file.read()
 
-    # 正規表現でqregの横の数字を取得
+    # Use regular expressions to extract the number next to qreg
     match = re.search(r"qreg q\[(\d+)\];", content)
     if match:
         number = match.group(1)
         return int(number)
     else:
-        raise ValueError("qubit数が分かりませんでした")
+        raise ValueError("Could not determine the number of qubits")
 
 
 def equivalence_check_via_mqt_qcec(
     circuit_1, circuit_2, exclude_zx_checker=False, show_log=True
 ):
-    # circuit_1, circuit_2はQASMファイルでもOK
+    # circuit_1, circuit_2 can also be QASM files
     qubit_limit = 25
     remove_flag1, remove_flag2 = False, False
     if isinstance(circuit_1, QuantumCircuit):

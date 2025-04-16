@@ -16,13 +16,13 @@ from mcr.tmerge_function import zhang_optimization_until_convergence
 
 
 def result_lists_to_dataframe(*result_list):
-    """結果をDataFrameに変換する関数
+    """Function to convert results into a DataFrame
 
     Args:
-        result_list (list): 結果のリスト
+        result_list (list): List of results
 
     Returns:
-        pd.DataFrame: 結果を格納したDataFrame
+        pd.DataFrame: DataFrame containing the results
     """
     data = list(result_list)
     df = pd.DataFrame(data)
@@ -38,7 +38,7 @@ def get_tcount_from_tket_circuit(arg_circuit):
 
 
 def tket_optimization(qasm_filepath_u, qasm_filepath_v):
-    # Tketの最適化(RemoveRedundancies)
+    # Optimization using Tket (RemoveRedundancies)
 
     circ_tk_u = circuit_from_qasm(qasm_filepath_u)
     circ_tk_v = circuit_from_qasm(qasm_filepath_v)
@@ -55,9 +55,9 @@ def tket_optimization(qasm_filepath_u, qasm_filepath_v):
 
     tket_before_opt_tcount = get_tcount_from_tket_circuit(circ_tk_u_opt)
     tket_after_opt_tcount = get_tcount_from_tket_circuit(circ_tk_v_opt)
-    # print("tketで最適化した結果")
-    # print(f"非最適化前の回路: {tket_before_tcount} -> {tket_before_opt_tcount}")
-    # print(f"非最適化後の回路: {tket_after_tcount} -> {tket_after_opt_tcount}")
+    # print("Results of optimization using Tket")
+    # print(f"Unoptimized circuit: {tket_before_tcount} -> {tket_before_opt_tcount}")
+    # print(f"Optimized circuit: {tket_after_tcount} -> {tket_after_opt_tcount}")
     return result_lists_to_dataframe(
         [tket_before_tcount, tket_before_opt_tcount],
         [tket_after_tcount, tket_after_opt_tcount],
@@ -67,19 +67,19 @@ def tket_optimization(qasm_filepath_u, qasm_filepath_v):
 def optimize_process_pyzx(
     pyzx_circuit: zx.circuit.Circuit, quiet: bool = True
 ) -> zx.circuit.Circuit:
-    """PyZXを使った最適化(max)
+    """Optimization using PyZX (max)
 
     Args:
-        pyzx_circuit (Circuit): PyZXのCircuit
-        quiet (bool, optional): ログを出力するか. Defaults to True.
+        pyzx_circuit (Circuit): PyZX Circuit
+        quiet (bool, optional): Whether to suppress logs. Defaults to True.
 
     Returns:
-        Circuit: 最適化されたCircuit
+        Circuit: Optimized Circuit
     """
     g = pyzx_circuit.to_graph()
     zx.full_reduce(
         g, quiet=quiet
-    )  # simplifies the Graph in-place, and show the rewrite steps taken.
+    )  # Simplifies the graph in-place and shows the rewrite steps taken.
     g.normalize()  # Makes the graph more suitable for displaying
     c_opt = zx.extract_circuit(g.copy())
     return c_opt
@@ -91,8 +91,8 @@ def pyzx_optimization(qasm_filepath_u, qasm_filepath_v):
     pyzx_before_opt = optimize_process_pyzx(pyzx_before)
     pyzx_after_opt = optimize_process_pyzx(pyzx_after)
 
-    # print(f"非最適化前の回路: {pyzx_before.tcount()} -> {pyzx_before_opt.tcount()}")
-    # print(f"非最適化後の回路: {pyzx_after.tcount()} -> {pyzx_after_opt.tcount()}")
+    # print(f"Unoptimized circuit: {pyzx_before.tcount()} -> {pyzx_before_opt.tcount()}")
+    # print(f"Optimized circuit: {pyzx_after.tcount()} -> {pyzx_after_opt.tcount()}")
     return result_lists_to_dataframe(
         [pyzx_before.tcount(), pyzx_before_opt.tcount()],
         [pyzx_after.tcount(), pyzx_after_opt.tcount()],
@@ -111,9 +111,9 @@ def tmerge_optimization(nqubits, input_seq, unopted_seq):
         nqubits, unopted_seq_stim, with_grouping_t_layers=True, with_process=True
     )
 
-    # print("Zhangのアルゴリズムで最適化した結果")
-    # print(f"非最適化前の回路: {len(stim_data_lst_u)} -> {len(input_qc_optimized_rotations)}")
-    # print(f"非最適化後の回路: {len(stim_data_lst_v)} -> {len(unopted_qc_optimized_rotations)}")
+    # print("Results of optimization using Zhang's algorithm")
+    # print(f"Unoptimized circuit: {len(stim_data_lst_u)} -> {len(input_qc_optimized_rotations)}")
+    # print(f"Optimized circuit: {len(stim_data_lst_v)} -> {len(unopted_qc_optimized_rotations)}")
     return result_lists_to_dataframe(
         [len(input_seq_stim), len(input_qc_optimized_rotations)],
         [len(unopted_seq_stim), len(unopted_qc_optimized_rotations)],
