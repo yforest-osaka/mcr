@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import pyzx as zx
 from qulacs import QuantumCircuit
@@ -47,3 +48,14 @@ def qasm_file_to_qc(input_file: str, output_file: str) -> None:
     qc_output = input_circuit.to_qc().replace("Tof", "tof")
     with open(output_file, mode="w") as f:
         f.write(qc_output)
+
+
+def save_by_pickle(filepath: str, list_data: list) -> None:
+    """Save list data in pickle format to the specified file path
+
+    Args:
+        filepath (str): File path to save the data
+        list_data (list): List data to save
+    """
+    with open(filepath, mode="wb") as fo:
+        pickle.dump(list_data, fo)

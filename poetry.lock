@@ -75,6 +75,18 @@ test = ["anyio[trio]", "blockbuster (>=1.5.23)", "coverage[toml] (>=7)", "except
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
+name = "appdirs"
+version = "1.4.4"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
+    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+
+[[package]]
 name = "appnope"
 version = "0.1.4"
 description = "Disable App Nap on macOS >= 10.9"
@@ -183,6 +195,22 @@ astroid = ["astroid (>=2,<4)"]
 test = ["astroid (>=2,<4)", "pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
+name = "astunparse"
+version = "1.6.3"
+description = "An AST unparser for Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
+    {file = "astunparse-1.6.3.tar.gz", hash = "sha256:5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872"},
+]
+
+[package.dependencies]
+six = ">=1.6.1,<2.0"
+wheel = ">=0.23.0,<1.0"
+
+[[package]]
 name = "async-lru"
 version = "2.0.5"
 description = "Simple LRU cache for asyncio"
@@ -213,6 +241,40 @@ dev = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pre-commit-uv", "pympler
 docs = ["cogapp", "furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-towncrier", "towncrier"]
 tests = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-xdist[psutil]"]
 tests-mypy = ["mypy (>=1.11.1)", "pytest-mypy-plugins"]
+
+[[package]]
+name = "autograd"
+version = "1.7.0"
+description = "Efficiently computes derivatives of NumPy code."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "autograd-1.7.0-py3-none-any.whl", hash = "sha256:49680300f842f3a8722b060ac0d3ed7aca071d1ad4d3d38c9fdadafdcc73c30b"},
+    {file = "autograd-1.7.0.tar.gz", hash = "sha256:de743fd368d6df523cd37305dcd171861a9752a144493677d2c9f5a56983ff2f"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[package.extras]
+scipy = ["scipy"]
+
+[[package]]
+name = "autoray"
+version = "0.7.1"
+description = "Abstract your array operations."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "autoray-0.7.1-py3-none-any.whl", hash = "sha256:36bbcac072771039073d896eb3e73cedbe41b879e247b6ec3c70781ce9afc720"},
+    {file = "autoray-0.7.1.tar.gz", hash = "sha256:e5af6c62ba7c3be8a36b2ab19e344c715f3478d39a0e47755aad365572bc90f8"},
+]
+
+[package.extras]
+docs = ["astroid (<3)", "furo", "ipython (!=8.7.0)", "myst-nb", "setuptools-scm", "sphinx (>=2.0)", "sphinx-autoapi", "sphinx-copybutton"]
+tests = ["coverage", "numpy", "pytest", "pytest-cov"]
 
 [[package]]
 name = "babel"
@@ -270,6 +332,18 @@ webencodings = "*"
 
 [package.extras]
 css = ["tinycss2 (>=1.1.0,<1.5)"]
+
+[[package]]
+name = "cachetools"
+version = "5.5.2"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "cachetools-5.5.2-py3-none-any.whl", hash = "sha256:d26a22bcc62eb95c3beabd9f1ee5e820d3d2704fe2967cbe350e20c8ffcd3f0a"},
+    {file = "cachetools-5.5.2.tar.gz", hash = "sha256:1a661caa9175d26759571b2e19580f9d6393969e5dfca11fdb1f947a23e640d4"},
+]
 
 [[package]]
 name = "certifi"
@@ -735,6 +809,23 @@ files = [
 ]
 
 [[package]]
+name = "diastatic-malt"
+version = "2.15.2"
+description = "A library for Python operator overloading"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "diastatic-malt-2.15.2.tar.gz", hash = "sha256:7eb90d8c30b7ff16b4e84c3a65de2ff7f5b7b9d0f5cdea23918e747ff7fb5320"},
+    {file = "diastatic_malt-2.15.2-py3-none-any.whl", hash = "sha256:85429257b356030f101c31b2c7d506c4829f21bd865aed796766f900d7908407"},
+]
+
+[package.dependencies]
+astunparse = "*"
+gast = "*"
+termcolor = "*"
+
+[[package]]
 name = "dill"
 version = "0.3.9"
 description = "serialize all of Python"
@@ -876,6 +967,18 @@ groups = ["main"]
 files = [
     {file = "fqdn-1.5.1-py3-none-any.whl", hash = "sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014"},
     {file = "fqdn-1.5.1.tar.gz", hash = "sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f"},
+]
+
+[[package]]
+name = "gast"
+version = "0.6.0"
+description = "Python AST that abstracts the underlying Python version"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+groups = ["main"]
+files = [
+    {file = "gast-0.6.0-py3-none-any.whl", hash = "sha256:52b182313f7330389f72b069ba00f174cfe2a06411099547288839c6cbafbd54"},
+    {file = "gast-0.6.0.tar.gz", hash = "sha256:88fc5300d32c7ac6ca7b515310862f71e6fdf2c029bbec7c66c0f5dd47b6b1fb"},
 ]
 
 [[package]]
@@ -2427,6 +2530,77 @@ files = [
 pillow = "*"
 
 [[package]]
+name = "pennylane"
+version = "0.41.0"
+description = "PennyLane is a cross-platform Python library for quantum computing, quantum machine learning, and quantum chemistry. Train a quantum computer the same way as a neural network."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "PennyLane-0.41.0-py3-none-any.whl", hash = "sha256:0cbd653c36e333e86ea72b67ddecd22c164f7ad6e4cdf6b9033dc5bc2df04cb6"},
+]
+
+[package.dependencies]
+appdirs = "*"
+autograd = "*"
+autoray = ">=0.6.11"
+cachetools = "*"
+diastatic-malt = "*"
+networkx = "*"
+numpy = "*"
+packaging = "*"
+pennylane-lightning = ">=0.41"
+requests = "*"
+rustworkx = ">=0.14.0"
+scipy = "*"
+tomlkit = "*"
+typing-extensions = "*"
+
+[package.extras]
+kernels = ["cvxopt", "cvxpy"]
+
+[[package]]
+name = "pennylane-lightning"
+version = "0.41.0"
+description = "PennyLane-Lightning plugin"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "pennylane_lightning-0.41.0-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:09fec6768b651545cb0ba5f8f8a408b1ced588cef03869d1fb6441efb07b2582"},
+    {file = "pennylane_lightning-0.41.0-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:b0cdad59e346b45d751e634c832bb2508019c2ccbc6651aeab7dc833657ff9e0"},
+    {file = "pennylane_lightning-0.41.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:bb8281de0de36e67262133ee951efa31121e7d2167540b86bfba35ad990ebc48"},
+    {file = "pennylane_lightning-0.41.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:7449329612ef279a3c770776b915415707c91bd97a1deccf74ffc0e7f224168e"},
+    {file = "pennylane_lightning-0.41.0-cp310-cp310-win_amd64.whl", hash = "sha256:38fdbc2a2233651c86c16baab7eeca0d57745551683e46753cd2d616f0eb528e"},
+    {file = "pennylane_lightning-0.41.0-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:86200a63f539d02ad528cbd2e663fa2783742b86dc798fcf3b4b6eded00917bf"},
+    {file = "pennylane_lightning-0.41.0-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:1231ccf161cc698340e8e89a2a99edea5f8821cb1a156861f5f059b9cca35502"},
+    {file = "pennylane_lightning-0.41.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:c986ee8af3acc50a9bd0a99bd839f1188dbde9be7a432abdcc0918d4ab04f3cc"},
+    {file = "pennylane_lightning-0.41.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:182c7c12cbe4884d88b2812e362afcb2291cdb331cb865e725fd3fe7e7bd7d59"},
+    {file = "pennylane_lightning-0.41.0-cp311-cp311-win_amd64.whl", hash = "sha256:252840530e23b63743627c40ca41a83f6266d8581edee2f70f600678c1f9e740"},
+    {file = "pennylane_lightning-0.41.0-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:ab902b10454e36af0779fa757088cfa7cd628a38d03dd4e19fb126faca1c4089"},
+    {file = "pennylane_lightning-0.41.0-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:6a9cf5e61dae3d24a13a71d8c5820cdf59bd520551b71c3fef04f9bc6d796f59"},
+    {file = "pennylane_lightning-0.41.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:dfcb34c35bc75e1505139f56be367dd037a566f4c5afbb81195a7ea2eb433324"},
+    {file = "pennylane_lightning-0.41.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:b7db30a5c248ba8ad413c320db3c18bc172515b9b6cb947537686459a3f08c57"},
+    {file = "pennylane_lightning-0.41.0-cp312-cp312-win_amd64.whl", hash = "sha256:3c0510feb91f2694ca65234e245ac01ed76ad3aaa80afe00684c1c2f9b056f08"},
+    {file = "pennylane_lightning-0.41.0-cp313-cp313-macosx_13_0_arm64.whl", hash = "sha256:2982d7f83981d681217b52ea89dc000b71fa848b5aa107bddf968be65bb71135"},
+    {file = "pennylane_lightning-0.41.0-cp313-cp313-macosx_13_0_x86_64.whl", hash = "sha256:638e04f6013e5d5aedb00c370f18e440b5f7eea1ff6075a925ff410eb4baca1d"},
+    {file = "pennylane_lightning-0.41.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:0a355ee4cefe92c1f5ebb1d13fb7bc297dcef3f271696c2624fa02bf57da1b0b"},
+    {file = "pennylane_lightning-0.41.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:4a3eb91ddf02c239e7c46271ee48ed28cce62ae88260cb60e25bfaf6cfc997a1"},
+    {file = "pennylane_lightning-0.41.0-cp313-cp313-win_amd64.whl", hash = "sha256:19ab43dfcbe4504bf4dd570278837ca4fc9fdeee3ef49258daf0a80f449fa608"},
+    {file = "pennylane_lightning-0.41.0-py3-none-any.whl", hash = "sha256:9d7d209faac19b6a4f785749871e96b79f149a5c92a24f3265af197f1835785c"},
+    {file = "pennylane_lightning-0.41.0.tar.gz", hash = "sha256:a51a34c627439dc16a7ab38fa3ccb608b1da68ab3e3b8e715205cbc01f0069f2"},
+]
+
+[package.dependencies]
+pennylane = ">=0.41"
+scipy-openblas32 = ">=0.3.26"
+
+[package.extras]
+gpu = ["pennylane-lightning-gpu"]
+kokkos = ["pennylane-lightning-kokkos"]
+tensor = ["pennylane-lightning-tensor"]
+
+[[package]]
 name = "pexpect"
 version = "4.9.0"
 description = "Pexpect allows easy control of interactive console applications."
@@ -3848,6 +4022,25 @@ doc = ["jupyterlite-pyodide-kernel", "jupyterlite-sphinx (>=0.13.1)", "jupytext"
 test = ["Cython", "array-api-strict (>=2.0)", "asv", "gmpy2", "hypothesis (>=6.30)", "meson", "mpmath", "ninja", "pooch", "pytest", "pytest-cov", "pytest-timeout", "pytest-xdist", "scikit-umfpack", "threadpoolctl"]
 
 [[package]]
+name = "scipy-openblas32"
+version = "0.3.29.0.0"
+description = "Provides OpenBLAS for python packaging"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:6b276ac72c00cc0850588663b9da4c8099d4bee8a2527557747cf6b8ed5179cb"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:dd74159091a83ae7bf7b066345c3d3e43e212cd4537c03a2fd873154e5a179f2"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:33994f0a37373ff6717fd9c948053a76c272efd516f8b33b3e51ecec786922fe"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9d6301960024370f6061c71e8efd8bcb5be22c6526a529ff05c370048adb6b04"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:02d32eafdf101f9503b99bd623e84f109a95cbe16d65492e174ed386339e2e1f"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:2ca3ee3b9143b86addccda36a741462621413766dbc09896b0b43cc223a3b051"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:768352307e56873538222526b7dbcfd3dcd8615451741d15eef9af718ac93750"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-win32.whl", hash = "sha256:e56c9c8e5e41d91d357b0d514fc59ca25467fbd68e5bdffa1f3dfa96f3249eb2"},
+    {file = "scipy_openblas32-0.3.29.0.0-py3-none-win_amd64.whl", hash = "sha256:8b21c803bdc344a383a1d5d392d3cfe5366d9b89d2aeee963705156000cbbc7a"},
+]
+
+[[package]]
 name = "seaborn"
 version = "0.13.2"
 description = "Statistical data visualization"
@@ -4409,6 +4602,18 @@ doc = ["sphinx", "sphinx_rtd_theme"]
 test = ["pytest", "ruff"]
 
 [[package]]
+name = "tomlkit"
+version = "0.13.2"
+description = "Style preserving TOML library"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
+    {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
+]
+
+[[package]]
 name = "tornado"
 version = "6.4.2"
 description = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
@@ -4712,6 +4917,21 @@ files = [
 ]
 
 [[package]]
+name = "wheel"
+version = "0.45.1"
+description = "A built-package format for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "wheel-0.45.1-py3-none-any.whl", hash = "sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248"},
+    {file = "wheel-0.45.1.tar.gz", hash = "sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729"},
+]
+
+[package.extras]
+test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
+
+[[package]]
 name = "widgetsnbextension"
 version = "3.6.10"
 description = "IPython HTML widgets for Jupyter"
@@ -4729,4 +4949,4 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "a7516cf286a68ab87e8bf550bc65cf28c1ef8061f74c17d80c13c826980f42ce"
+content-hash = "ab5f04a161369c1ba155d7c57e18667d750fdc4467970afa27e185936a5bc3a5"
