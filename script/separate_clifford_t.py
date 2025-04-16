@@ -103,14 +103,25 @@ def stim_litinski_compile(qasm_filepath):
 
 
 def main():
-    filepath = "../data/transpiled_qasm/barenco_tof_3.qasm"
 
-    st = time()
-    data = stim_litinski_compile(filepath)
-    print("Time:", time() - st)
-    print(filepath)
-    output_filepath = f"../data/litinski_rotations/stim_{Path(filepath).stem}.pickle"
-    save_by_pickle(output_filepath, data)
+    target_directory = Path("../external_data/qasm")
+    files = list(target_directory.glob("*.qasm"))
+    cpu_count = 12
+
+    def process_file(file):
+        print("Processing file:", file)
+        st = time()
+        data = stim_litinski_compile(file)
+        output_filepath = f"../external_data/rotops/{file.stem}.pickle"
+        save_by_pickle(output_filepath, data)
+        et = time()
+        print(f"File {file} processed in {et - st:.2f} seconds.")
+
+    Parallel(n_jobs=cpu_count)(
+        delayed(process_file)(file) for file in tqdm(files, desc="Processing files")
+    )
+
+    print("Conversion completed.")
 
 
 if __name__ == "__main__":
