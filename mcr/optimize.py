@@ -1,16 +1,19 @@
 # 新しく作成
-from pytket.circuit import OpType
-from pytket.passes import RemoveRedundancies
-from pytket.qasm import circuit_from_qasm
-from mcr.filesave import qulacs_to_pyzx, qasm_to_pyzx, qasm_file_to_qc, mkdir_tmp_if_not_exists
-import pyzx as zx
-from mcr.stim_function import zhang_optimization_until_convergence
-import subprocess
 import os
+import subprocess
 import time
 from pathlib import Path
 from uuid import uuid4
+
 import pandas as pd
+import pyzx as zx
+from pytket.circuit import OpType
+from pytket.passes import RemoveRedundancies
+from pytket.qasm import circuit_from_qasm
+
+from mcr.filesave import mkdir_tmp_if_not_exists, qasm_file_to_qc, qasm_to_pyzx
+from mcr.stim_function import zhang_optimization_until_convergence
+
 
 def result_lists_to_dataframe(*result_list):
     """結果をDataFrameに変換する関数
@@ -23,14 +26,15 @@ def result_lists_to_dataframe(*result_list):
     """
     data = list(result_list)
     df = pd.DataFrame(data)
-    df.columns = ['before_opt', 'after_opt']
-    df.index = ['input_circuit', 'unopted_circuit']
+    df.columns = ["before_opt", "after_opt"]
+    df.index = ["input_circuit", "unopted_circuit"]
     return df.T
-    
 
 
 def get_tcount_from_tket_circuit(arg_circuit):
-    return arg_circuit.n_gates_of_type(OpType.T) + arg_circuit.n_gates_of_type(OpType.Tdg)
+    return arg_circuit.n_gates_of_type(OpType.T) + arg_circuit.n_gates_of_type(
+        OpType.Tdg
+    )
 
 
 def tket_optimization(qasm_filepath_u, qasm_filepath_v):
@@ -54,11 +58,15 @@ def tket_optimization(qasm_filepath_u, qasm_filepath_v):
     # print("tketで最適化した結果")
     # print(f"非最適化前の回路: {tket_before_tcount} -> {tket_before_opt_tcount}")
     # print(f"非最適化後の回路: {tket_after_tcount} -> {tket_after_opt_tcount}")
-    return result_lists_to_dataframe([tket_before_tcount, tket_before_opt_tcount], [tket_after_tcount, tket_after_opt_tcount])
+    return result_lists_to_dataframe(
+        [tket_before_tcount, tket_before_opt_tcount],
+        [tket_after_tcount, tket_after_opt_tcount],
+    )
 
 
-
-def optimize_process_pyzx(pyzx_circuit: zx.circuit.Circuit, quiet: bool = True) -> zx.circuit.Circuit:
+def optimize_process_pyzx(
+    pyzx_circuit: zx.circuit.Circuit, quiet: bool = True
+) -> zx.circuit.Circuit:
     """PyZXを使った最適化(max)
 
     Args:
@@ -69,10 +77,13 @@ def optimize_process_pyzx(pyzx_circuit: zx.circuit.Circuit, quiet: bool = True) 
         Circuit: 最適化されたCircuit
     """
     g = pyzx_circuit.to_graph()
-    zx.full_reduce(g, quiet=quiet)  # simplifies the Graph in-place, and show the rewrite steps taken.
+    zx.full_reduce(
+        g, quiet=quiet
+    )  # simplifies the Graph in-place, and show the rewrite steps taken.
     g.normalize()  # Makes the graph more suitable for displaying
     c_opt = zx.extract_circuit(g.copy())
     return c_opt
+
 
 def pyzx_optimization(qasm_filepath_u, qasm_filepath_v):
     pyzx_before = qasm_to_pyzx(qasm_filepath_u)
@@ -82,14 +93,17 @@ def pyzx_optimization(qasm_filepath_u, qasm_filepath_v):
 
     # print(f"非最適化前の回路: {pyzx_before.tcount()} -> {pyzx_before_opt.tcount()}")
     # print(f"非最適化後の回路: {pyzx_after.tcount()} -> {pyzx_after_opt.tcount()}")
-    return result_lists_to_dataframe([pyzx_before.tcount(), pyzx_before_opt.tcount()], [pyzx_after.tcount(), pyzx_after_opt.tcount()])
+    return result_lists_to_dataframe(
+        [pyzx_before.tcount(), pyzx_before_opt.tcount()],
+        [pyzx_after.tcount(), pyzx_after_opt.tcount()],
+    )
 
 
 def tmerge_optimization(nqubits, input_seq, unopted_seq):
 
     input_seq_stim = input_seq.sort_gate_sequence(only_gates=True)
     unopted_seq_stim = unopted_seq.sort_gate_sequence(only_gates=True)
-    
+
     input_qc_optimized_rotations, _, _ = zhang_optimization_until_convergence(
         nqubits, input_seq_stim, with_grouping_t_layers=True, with_process=True
     )
@@ -100,26 +114,30 @@ def tmerge_optimization(nqubits, input_seq, unopted_seq):
     # print("Zhangのアルゴリズムで最適化した結果")
     # print(f"非最適化前の回路: {len(stim_data_lst_u)} -> {len(input_qc_optimized_rotations)}")
     # print(f"非最適化後の回路: {len(stim_data_lst_v)} -> {len(unopted_qc_optimized_rotations)}")
-    return result_lists_to_dataframe([len(input_seq_stim), len(input_qc_optimized_rotations)], [len(unopted_seq_stim), len(unopted_qc_optimized_rotations)])
+    return result_lists_to_dataframe(
+        [len(input_seq_stim), len(input_qc_optimized_rotations)],
+        [len(unopted_seq_stim), len(unopted_qc_optimized_rotations)],
+    )
 
 
 def analyze_qc_file(filepath):
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         lines = f.readlines()
 
     # --- Process the first line (ancilla count) ---
     header = lines[0].strip().split()
-    filtered = [item for item in header if not (item == '.v' or item.startswith('q'))]
+    filtered = [item for item in header if not (item == ".v" or item.startswith("q"))]
     ancilla_count = len(filtered)
 
     # --- Count "T" from the second line onwards ---
     T_count = 0
     for line in lines[1:]:
         parts = line.strip().split()
-        if parts and parts[0] == 'T':
+        if parts and parts[0] == "T":
             T_count += 1
 
     return ancilla_count, T_count
+
 
 def fasttodd_optimization(unopted_circuit_filepath):
     mkdir_tmp_if_not_exists()
@@ -140,11 +158,7 @@ def fasttodd_optimization(unopted_circuit_filepath):
     # Execute the Rust command asynchronously
     cmd = ["cargo", "+nightly", "run", "--release", abs_tmp_qc_filepath]
     process = subprocess.Popen(
-        cmd,
-        cwd=work_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
+        cmd, cwd=work_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
 
     # print(f"Running command: {' '.join(cmd)}")
@@ -179,7 +193,7 @@ def fasttodd_optimization(unopted_circuit_filepath):
         ancilla, T = analyze_qc_file(output_filepath)
         os.remove(output_filepath)
         os.remove(tmp_qc_filepath)
-        df = pd.DataFrame({'added_ancilla': [ancilla], 'after_opt_T_count': [T]})
+        df = pd.DataFrame({"added_ancilla": [ancilla], "after_opt_T_count": [T]})
         return df
     else:
-        return {'error': 'Output file was not found'}
+        return {"error": "Output file was not found"}

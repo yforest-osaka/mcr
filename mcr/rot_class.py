@@ -11,44 +11,8 @@ from qulacs.gate import CNOT, H, PauliRotation, S, Sdag, T, Tdag, X, Y, Z
 from qulacs_core import ClsOneQubitGate
 from qulacsvis import circuit_drawer
 
-from mcr.circuit_ops import are_unitaries_equivalent, get_merged_matrix
-from mcr.clifford import complement_identity, is_clifford
-from mcr.filesave import qulacs_to_pyzx
-from mcr.pauli_bit_ops import (
-    pauli_bit_to_pauli_id,
-    pauli_bit_to_pauli_string,
-    pauli_id_to_pauli_bit,
-    pauli_string_to_pauli_bit,
-)
-
-# 2qubit回転ゲートに関する様々な定義や操作を行うクラス
-# pauli_str_to_id_dict = {
-#     "II": (0, 0),
-#     "IX": (0, 1),
-#     "IY": (0, 2),
-#     "IZ": (0, 3),
-#     "XI": (1, 0),
-#     "XX": (1, 1),
-#     "XY": (1, 2),
-#     "XZ": (1, 3),
-#     "YI": (2, 0),
-#     "YX": (2, 1),
-#     "YY": (2, 2),
-#     "YZ": (2, 3),
-#     "ZI": (3, 0),
-#     "ZX": (3, 1),
-#     "ZY": (3, 2),
-#     "ZZ": (3, 3),
-# }
-
-# id_to_pauli_str_dict = {v: k for k, v in pauli_str_to_id_dict.items()}
-
-
-def is_double_tuple(tup):
-    # タプルであるかどうか、さらにすべての要素がタプルであるかを確認
-    if isinstance(tup, tuple) and all(isinstance(i, tuple) for i in tup):
-        return True
-    return False
+from mcr.clifford import complement_identity
+from mcr.pauli_bit_ops import pauli_bit_to_pauli_id, pauli_string_to_pauli_bit
 
 
 def find_non_zero_index(tup):
@@ -72,38 +36,6 @@ def apply_pauli_gates(circuit, qubit_indices, pauli_ids, right_side=False):
             else:
                 circuit.add_gate(Sdag(idx))
                 circuit.add_gate(H(idx))
-
-
-def add_T_orTdag(seed: int, index: int) -> ClsOneQubitGate:
-    """TゲートもしくはTdagゲートを返す
-
-    Args:
-        index (int): qubit_index
-        seed (int, optional): Tなら1、Tdagなら-1(1以外)を指定する. Defaults to 1.
-
-    Returns:
-        ClsOneQubitGate: T or Tdag gate
-    """
-    if seed == 1:
-        return T(index)
-    else:
-        return Tdag(index)
-
-
-def add_S_orSdag(seed: int, index: int) -> ClsOneQubitGate:
-    """SゲートもしくはSdagゲートを返す
-
-    Args:
-        index (int): qubit_index
-        seed (int, optional): Sなら1、Sdagなら-1(1以外)を指定する. Defaults to 1.
-
-    Returns:
-        ClsOneQubitGate: S or Sdag gate
-    """
-    if seed == 1:
-        return S(index)
-    else:
-        return Sdag(index)
 
 
 def apply_rotation_gate(circuit, angle, position):
@@ -146,192 +78,24 @@ def apply_rotation_gate(circuit, angle, position):
     #     raise ValueError(f"Invalid angle: {angle}")
 
 
-def multiply(string1, string2):
-    pauli_product_dicts = {
-        "II": [1, "I"],
-        "IX": [1, "X"],
-        "IY": [1, "Y"],
-        "IZ": [1, "Z"],
-        "XI": [1, "X"],
-        "XX": [1, "I"],
-        "XY": [1j, "Z"],
-        "XZ": [-1j, "Y"],
-        "YI": [1, "Y"],
-        "YX": [-1j, "Z"],
-        "YY": [1, "I"],
-        "YZ": [1j, "X"],
-        "ZI": [1, "Z"],
-        "ZX": [1j, "Y"],
-        "ZY": [-1j, "X"],
-        "ZZ": [1, "I"],
-    }
-    assert len(string1) == len(string2)
-    coefs = 1
-    paulis = ""
-    for i in range(len(string1)):
-        pauli_left, pauli_right = string1[i], string2[i]
-        coef, pauli = pauli_product_dicts[pauli_left + pauli_right]
-        coefs *= coef
-        paulis += pauli
-    return coefs, paulis
-
-
-def calculation(original_coef_dict, applying_gates):
-    multiply_counter = 0
-    results = {
-        "II": 0,
-        "IX": 0,
-        "IY": 0,
-        "IZ": 0,
-        "XI": 0,
-        "XX": 0,
-        "XY": 0,
-        "XZ": 0,
-        "YI": 0,
-        "YX": 0,
-        "YY": 0,
-        "YZ": 0,
-        "ZI": 0,
-        "ZX": 0,
-        "ZY": 0,
-        "ZZ": 0,
-    }
-    # for dict in [sin_dicts,cos_dicts]:
-    non_zero_keys = {key: value for key, value in original_coef_dict.items() if value != 0}
-    paulis = list(non_zero_keys.keys())  # 元々の
-    coefs = list(non_zero_keys.values())
-
-    for i, pauli in enumerate(paulis):
-        for gate in applying_gates:
-            original_coef = coefs[i]  # pauliから取り出す
-            # print(gate)
-            new_phase, new_paulis = multiply(pauli, gate[1])
-            results[new_paulis] += original_coef * gate[0] * new_phase
-            multiply_counter += 1
-    # print(multiply_counter)
-    return results
-
-
-def swapping_4_4_matrix(matrix):
-    assert matrix.shape[0] == 4
-    SWAP_MATRIX = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
-    return SWAP_MATRIX @ matrix @ SWAP_MATRIX
-
-
-def tensor(pauli_id1, pauli_id2):
-    x, y, z = X(0).get_matrix(), Y(0).get_matrix(), Z(0).get_matrix()
-    string_to_matrix = {"I": np.eye(2), "X": x, "Y": y, "Z": z}
-    return np.kron(string_to_matrix[pauli_id1], string_to_matrix[pauli_id2])
-
-
-def gen_matrix_form_dicts(dictionary):
-    COS = sp.Symbol("c")
-    SIN = sp.Symbol("s")
-    matrix = np.zeros([4, 4])
-    for ele in dictionary.keys():
-        coef = complex(dictionary[ele].subs([(SIN, np.sin(np.pi / 8)), (COS, np.cos(np.pi / 8))]).evalf())
-        assert tensor(ele[0], ele[1]).shape == (4, 4)
-        term = coef * tensor(ele[0], ele[1])
-        matrix = matrix + term
-    return matrix
-
-
-def rotation_to_gates(pauli_id, phase):
-    COS = sp.Symbol("c")
-    SIN = sp.Symbol("s")
-    if phase == np.pi / 4:
-        return [[COS, "II"], [-1j * SIN, pauli_id]]
-    elif phase == -np.pi / 4:
-        return [[COS, "II"], [1j * SIN, pauli_id]]
-    else:
-        raise ValueError(f"Invalid input: {pauli_id, phase}")
-
-
-def synthesis(gates_element_list):
-    initial_coefs = {
-        "II": 0,
-        "IX": 0,
-        "IY": 0,
-        "IZ": 0,
-        "XI": 0,
-        "XX": 0,
-        "XY": 0,
-        "XZ": 0,
-        "YI": 0,
-        "YX": 0,
-        "YY": 0,
-        "YZ": 0,
-        "ZI": 0,
-        "ZX": 0,
-        "ZY": 0,
-        "ZZ": 0,
-    }
-    coefs = initial_coefs.copy()
-
-    initial_data1, initial_data2 = gates_element_list[0]
-
-    coefs[initial_data1[1]] = initial_data1[0]
-    coefs[initial_data2[1]] = initial_data2[0]
-
-    tmp = coefs.copy()
-    for gate in gates_element_list[1:]:
-        tmp = calculation(tmp, gate)
-    value = tmp.copy()
-
-    non_zero_keys = {key: value for key, value in value.items() if value != 0}
-    return non_zero_keys
-
-
-def gen_pauli_strings_from_nqubits(nqubits, exclude_identity=True):
-    pauli_strs = ["I", "X", "Y", "Z"]
-    data = []
-    for ele in product(pauli_strs, repeat=nqubits):
-        tmp = list(ele)
-        data.append("".join(tmp))
-    if exclude_identity:
-        data.remove("I" * nqubits)
-    return data
-
-
-def gen_pauli_string_id_dict(nqubits, exclude_identity=False):
-    from mcr.utils import gen_candidates
-
-    pauli_strings = gen_pauli_strings_from_nqubits(nqubits, exclude_identity=exclude_identity)
-    pauli_ids = gen_candidates(nqubits, repeat=1, exclude_identity=exclude_identity)
-    assert len(pauli_strings) == len(pauli_ids)
-    return {pauli: pauli_id for pauli, pauli_id in zip(pauli_strings, pauli_ids)}
-
-
-def satisfies_litinski_condition(rot1, rot2):
-    if not rot1.all_commutable_in_one_group():
-        return False
-    if not rot2.all_commutable_in_one_group():
-        return False
-    left_gate_count = rot1.get_gate_count()
-    check_rot = rot1.duplicate()
-    # print(check_rot.get_all())
-    check_rot.merge(rot2)
-    for i in range(left_gate_count, check_rot.get_gate_count()):
-        tf_lst = []
-        for j in range(left_gate_count):
-            tf_lst.append(check_rot.is_commute(i, j))
-        if all(tf_lst):
-            return False
-    return True
-
-
 class RotOps:
 
-    def __init__(self, gate_sequence: list[str] | list[list[int]] | list[tuple[int]]) -> None:
+    def __init__(
+        self, gate_sequence: list[str] | list[list[int]] | list[tuple[int]]
+    ) -> None:
         if len(gate_sequence) == 0:
             self.__pauli_bits = []
             self.__angles = []
         else:
             input_element = gate_sequence[0]
             if isinstance(input_element, str):  # ["II", "XX", "II", "YY"]
-                self.__pauli_bits = [pauli_string_to_pauli_bit(ele) for ele in gate_sequence]
+                self.__pauli_bits = [
+                    pauli_string_to_pauli_bit(ele) for ele in gate_sequence
+                ]
             else:  # [[0,0], [1,1], [0,0], [2,2]]
-                self.__pauli_bits = [pauli_id_to_pauli_bit(ele) for ele in gate_sequence]
+                self.__pauli_bits = [
+                    pauli_id_to_pauli_bit(ele) for ele in gate_sequence
+                ]
             self.__angles = [0 for _ in range(len(gate_sequence))]
 
     def get_pauli_bits(self):
@@ -348,7 +112,9 @@ class RotOps:
                     data.append((-1, pauli_bit_to_pauli_id(pauli_bit, with_coef=False)))
             return data
         else:
-            return [pauli_bit_to_pauli_id(ele, with_coef=False) for ele in self.__pauli_bits]
+            return [
+                pauli_bit_to_pauli_id(ele, with_coef=False) for ele in self.__pauli_bits
+            ]
 
     def get_angles(self):
         return self.__angles
@@ -357,11 +123,15 @@ class RotOps:
         return np.sign(self.__angles)
 
     def get_pauli_strings(self):
-        return [pauli_bit_to_pauli_string(ele, with_coef=False) for ele in self.__pauli_bits]
+        return [
+            pauli_bit_to_pauli_string(ele, with_coef=False) for ele in self.__pauli_bits
+        ]
 
     def get_distribution_pauli(self, minimum_count: int = 1):
         data = Counter(self.get_pauli_strings())
-        filtered_data = Counter({key: value for key, value in data.items() if value >= minimum_count})
+        filtered_data = Counter(
+            {key: value for key, value in data.items() if value >= minimum_count}
+        )
         return filtered_data
 
     def get_gate_count(self):
@@ -430,7 +200,9 @@ class RotOps:
         ), f"Pauli列の要素数({len(self.__pauli_bits)})と一致していません: {angle_list}"
         self.__angles = angle_list
 
-    def insert_angles_from_sgn(self, sgn_list: list):  # 符号だけで角度情報を入力できます
+    def insert_angles_from_sgn(
+        self, sgn_list: list
+    ):  # 符号だけで角度情報を入力できます
         assert len(sgn_list) == len(
             self.__pauli_bits
         ), f"Pauli列の要素数({len(self.__pauli_bits)})と一致していません: {sgn_list}"
@@ -495,9 +267,14 @@ class RotOps:
 
     def get_qulacs_circuit(self):
         pauli_ids = self.get_pauli_ids()
-        angles = [-1 * angle for angle in self.__angles]  # qulacsの回転ゲートに-1をかける
+        angles = [
+            -1 * angle for angle in self.__angles
+        ]  # qulacsの回転ゲートに-1をかける
         n = len(pauli_ids[0])
-        gates = [PauliRotation([i for i in range(n)], pauli, angle) for pauli, angle in zip(pauli_ids, angles)]
+        gates = [
+            PauliRotation([i for i in range(n)], pauli, angle)
+            for pauli, angle in zip(pauli_ids, angles)
+        ]
 
         circuit = QuantumCircuit(n)
         for gate in gates:
@@ -522,7 +299,9 @@ class RotOps:
 
             # CNOTゲートが必要かを判断
             if len(qubit_indices) >= 2:  # CNOT必要
-                apply_pauli_gates(circuit, qubit_indices, non_identity_pauli_ids, right_side=False)
+                apply_pauli_gates(
+                    circuit, qubit_indices, non_identity_pauli_ids, right_side=False
+                )
 
                 # CNOTゲートを適用
                 for idx in qubit_indices:
@@ -538,12 +317,18 @@ class RotOps:
                         circuit.add_gate(CNOT(idx, position))
 
                 # Pauliゲートを逆順に適用
-                apply_pauli_gates(circuit, qubit_indices, non_identity_pauli_ids, right_side=True)
+                apply_pauli_gates(
+                    circuit, qubit_indices, non_identity_pauli_ids, right_side=True
+                )
 
             else:  # CNOT不要
-                apply_pauli_gates(circuit, qubit_indices, non_identity_pauli_ids, right_side=False)
+                apply_pauli_gates(
+                    circuit, qubit_indices, non_identity_pauli_ids, right_side=False
+                )
                 apply_rotation_gate(circuit, angle, position)
-                apply_pauli_gates(circuit, qubit_indices, non_identity_pauli_ids, right_side=True)
+                apply_pauli_gates(
+                    circuit, qubit_indices, non_identity_pauli_ids, right_side=True
+                )
         if gates_only:
             return [circuit.get_gate(i) for i in range(circuit.get_gate_count())]
         else:
@@ -629,43 +414,14 @@ class RotOps:
         else:
             return False
 
-    def get_pyzx_optimized_graph(self, show_graph: bool = False):
-        circuit_qulacs = self.convert_to_clifford_t_circuit()
-        # Cliffordか判定
-        c_zx = qulacs_to_pyzx(circuit_qulacs)
-        g = c_zx.to_graph()
-        zx.full_reduce(g)
-        if show_graph:
-            g.normalize()
-            zx.draw(g)
-        return g.copy()
-
-    # この2qubit回転ゲートが非自明なClifford回路を生成するかどうかを判定する
-    def is_non_trivial_clifford(self, show_graph: bool = False):
-
-        circuit_qulacs = self.convert_to_clifford_t_circuit()
-        # Cliffordか判定
-        mat = get_merged_matrix(circuit_qulacs)
-        if not is_clifford(mat):
-            return 0
-        else:
-            c_zx = qulacs_to_pyzx(circuit_qulacs)
-            g = c_zx.to_graph()
-            zx.full_reduce(g)
-            if show_graph:
-                g.normalize()
-                zx.draw(g)
-            c_aft = zx.extract_circuit(g.copy())
-            if c_aft.tcount() > 0:
-                # print('発見！')
-                # return data
-                return 2
-            else:
-                return 1
-
     def get_each_pauli_matrix(self, include_sgn: bool = False):
         matrices = []
-        number_to_matrix = {0: np.eye(2), 1: X(0).get_matrix(), 2: Y(0).get_matrix(), 3: Z(0).get_matrix()}
+        number_to_matrix = {
+            0: np.eye(2),
+            1: X(0).get_matrix(),
+            2: Y(0).get_matrix(),
+            3: Z(0).get_matrix(),
+        }
         pauli_ids = self.get_pauli_ids()
         sgns = self.get_sgn_angles()
         for i in range(len(pauli_ids)):
@@ -698,7 +454,10 @@ class RotOps:
     # Apply the sign of the rotation axis to the rotation angle
     def apply_rot_axis_sgn_to_angles(self):
         original_pauli_bit_data = self.get_pauli_bits().copy()
-        new_data = [pauli_bit_to_pauli_id(ele, with_coef=False) for ele in original_pauli_bit_data]
+        new_data = [
+            pauli_bit_to_pauli_id(ele, with_coef=False)
+            for ele in original_pauli_bit_data
+        ]
         angle_sgn_update = []
         for pauli_bit in original_pauli_bit_data:
             sgn = pauli_bit[0]

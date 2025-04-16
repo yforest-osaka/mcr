@@ -38,14 +38,13 @@ from qulacs_core import ClsOneQubitGate
 # Qulacs可視化
 from qulacsvis import circuit_drawer
 
-# 自作モジュール
-from mcr.mydecomp import my_3q_decomp
-
 # エラー設定
 np.seterr(all="ignore")
 
 
-def get_inverse_gate(parametric_gate: ParametricPauliRotation) -> ParametricPauliRotation:
+def get_inverse_gate(
+    parametric_gate: ParametricPauliRotation,
+) -> ParametricPauliRotation:
     """ParametricPauliRotationを引数として、その回転角を逆にしたゲートを取得する
 
     Args:
@@ -149,7 +148,10 @@ class MyQuantumProgram:
                     # 結果が[0, 0]であればやり直す
                     if pauli_ids != [0, 0]:
                         break
-                self.add_gate((i,), ParametricPauliRotation(targets, pauli_ids, random.choice(angles)))
+                self.add_gate(
+                    (i,),
+                    ParametricPauliRotation(targets, pauli_ids, random.choice(angles)),
+                )
                 i += 1
 
     def __add_rzz_qc_gateset(self, depth: int, angles: list[float]) -> None:
@@ -168,11 +170,17 @@ class MyQuantumProgram:
                 # angles = [-np.pi/4, -np.pi/2, np.pi/4, np.pi/2]
                 targets = sorted([qubit_index[2 * k], qubit_index[2 * k + 1]])
                 pauli_ids = [3, 3]
-                self.add_gate((i,), ParametricPauliRotation(targets, pauli_ids, random.choice(angles)))
+                self.add_gate(
+                    (i,),
+                    ParametricPauliRotation(targets, pauli_ids, random.choice(angles)),
+                )
                 i += 10
 
     def add_qc_gateset(
-        self, arg_depth: int, arg_circuit_type: str = "RandomUnitary", arg_angles: list[float] = [np.pi / 4, -np.pi / 4]
+        self,
+        arg_depth: int,
+        arg_circuit_type: str = "RandomUnitary",
+        arg_angles: list[float] = [np.pi / 4, -np.pi / 4],
     ) -> None:
         """ランダム量子回路を配置するメソッド
 
@@ -225,7 +233,10 @@ class MyQuantumProgram:
         indices = gate.get_target_index_list()
         for index in indices:
             self.index_distribution[f"{index}"] += 1  # index_distributionの更新
-        self.__gate_list[position] = (self.__gate_list[position][0], gate)  # gate_idは継承する
+        self.__gate_list[position] = (
+            self.__gate_list[position][0],
+            gate,
+        )  # gate_idは継承する
 
     def __len__(self) -> int:
         """len()をつけた時の定義(削除されるべきゲートも含むことに注意！確認用)
@@ -270,7 +281,9 @@ class MyQuantumProgram:
             plt.bar(list(data.keys()), list(data.values()), align="center")
             plt.xlabel("index")
             plt.ylabel("gate_count")
-        return collections.Counter(self.index_distribution)  # ゲートの入っていないようなqubitが存在してもworkする
+        return collections.Counter(
+            self.index_distribution
+        )  # ゲートの入っていないようなqubitが存在してもworkする
 
     def get_index_distribution_in_nqubits(
         self, show_graph: bool = False, max_block_size: int = 3
@@ -314,7 +327,12 @@ class MyQuantumProgram:
         c = collections.Counter(results)
         return c.most_common()
 
-    def get_all(self, target_id: tuple | bool = False, only_id: bool = False, include_position: bool = False) -> List:
+    def get_all(
+        self,
+        target_id: tuple | bool = False,
+        only_id: bool = False,
+        include_position: bool = False,
+    ) -> List:
         """全てのゲート列を取得するメソッド
 
         Args:
@@ -359,7 +377,9 @@ class MyQuantumProgram:
         Returns:
             list[tuple[int]]: ゲートのIDのリスト
         """
-        return [data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums]
+        return [
+            data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums
+        ]
 
     def draw(self, cut_position: int = False):
         """量子回路の可視化を行うメソッド"""
@@ -399,7 +419,9 @@ class MyQuantumProgram:
             ValueError: すでに削除されているゲートを削除しようとした場合
         """
         if position in self.del_nums:
-            raise ValueError(f"The position {position} is already included in del_nums!:{self.del_nums}")
+            raise ValueError(
+                f"The position {position} is already included in del_nums!:{self.del_nums}"
+            )
         self.del_nums.add(position)
         # index_distributionを更新(削除されるものを反映する)
         indices = self.__gate_list[position][1].get_target_index_list()
@@ -544,7 +566,9 @@ class MyQuantumProgram:
         """
         tmp_circ = MyQuantumProgram(self.__n_qubit)
         tmp_circ.__gate_list = self.__gate_list.copy()  # gate_listのコピー
-        tmp_circ.index_distribution = copy.deepcopy(self.index_distribution)  # index_distributionのcopy
+        tmp_circ.index_distribution = copy.deepcopy(
+            self.index_distribution
+        )  # index_distributionのcopy
         tmp_circ.del_nums = self.del_nums.copy()  # del_numsのコピー
         return tmp_circ
 
@@ -612,7 +636,9 @@ class GateFactory:
         g2 = tmp_circ.get_gate(0)
         return g1, g2
 
-    def recalculate_matrix(self, another_gate, option: str) -> tuple[list[int], np.ndarray, list[int], np.ndarray]:
+    def recalculate_matrix(
+        self, another_gate, option: str
+    ) -> tuple[list[int], np.ndarray, list[int], np.ndarray]:
         """2つの行列の入れ替えに伴い生成される新しい行列を計算するメソッド"""
         gate_left, gate_right = self.complement_identity(another_gate)
         # test_circuit1 = QuantumCircuit(3)
@@ -636,7 +662,9 @@ class GateFactory:
     def swap(self, another_gate, option: str, run_kak: bool, qubit_count=None) -> list:
         """2つのゲートを入れ替えるメソッド"""
         # 重複するindexがあるかないかを判定する機構(無ければ単に入れ替えるだけ)
-        if len(set(self.target) & set(another_gate.target)) == 0:  # おそらくこの条件にかかることはない
+        if (
+            len(set(self.target) & set(another_gate.target)) == 0
+        ):  # おそらくこの条件にかかることはない
             print("No change")
             return [another_gate.gate, self.gate]
         idx1, mat1, idx2, mat2 = self.recalculate_matrix(another_gate, option)
@@ -649,7 +677,12 @@ class GateFactory:
         converted_target1 = [inverse_swap_map[number] for number in idx1]
         converted_target2 = [inverse_swap_map[number] for number in idx2]
 
-        if np.allclose(mat1.dot(np.conj(mat1.T)), np.eye(mat1.shape[0]), rtol=1e-05, atol=1e-08) == False:
+        if (
+            np.allclose(
+                mat1.dot(np.conj(mat1.T)), np.eye(mat1.shape[0]), rtol=1e-05, atol=1e-08
+            )
+            == False
+        ):
             raise ValueError(f"Matrix is not unitary: {mat1}")
         # mat1_load = np.load('tmp_new.npy')
         # accuracy = 4 # 精度を設定することができる
@@ -679,10 +712,14 @@ class GateFactory:
             gates.append(self.gate)
         return gates
 
-    def swap_without_3q_gate(self, another_gate, option, remove_edge_gate: bool = False):
+    def swap_without_3q_gate(
+        self, another_gate, option, remove_edge_gate: bool = False
+    ):
         """3量子ビットゲートの分解を使わずに2つのゲートを入れ替えるメソッド(only available for Clifford + T)"""
         # 重複するindexがあるかないかを判定する機構(無ければ単に入れ替えるだけ)
-        if len(set(self.target) & set(another_gate.target)) == 0:  # おそらくこの条件にかかることはない
+        if (
+            len(set(self.target) & set(another_gate.target)) == 0
+        ):  # おそらくこの条件にかかることはない
             print("No change")
             return [another_gate.gate, self.gate]
 
@@ -717,7 +754,11 @@ def get_gate_info(gate, with_parameter: bool = True) -> tuple:
         else:
             results_pauli_ids.append("I")
     if with_parameter:
-        return gate.get_target_index_list(), results_pauli_ids, gate.get_parameter_value()
+        return (
+            gate.get_target_index_list(),
+            results_pauli_ids,
+            gate.get_parameter_value(),
+        )
     else:
         return gate.get_target_index_list(), results_pauli_ids
 
@@ -749,7 +790,9 @@ def get_gates_from_parameter(residue: int, target_index: int) -> list:
     return gate_dicts[residue]
 
 
-def two_qubit_pauli_gate_converter_of_qulacs(qulacs_circuit: QuantumCircuit, parameters: list[float]) -> QuantumCircuit:
+def two_qubit_pauli_gate_converter_of_qulacs(
+    qulacs_circuit: QuantumCircuit, parameters: list[float]
+) -> QuantumCircuit:
     """Qulacsの回路をPauliゲートに変換するメソッド"""
     circuit_out = QuantumCircuit(qulacs_circuit.get_qubit_count())
     counter = 0
@@ -785,7 +828,9 @@ def two_qubit_pauli_gate_converter_of_qulacs(qulacs_circuit: QuantumCircuit, par
                     circuit_out.add_gate(gate)
             else:
                 if paulis[0] != "I":
-                    for i, gate in enumerate(get_gates_from_parameter(residue, control)):
+                    for i, gate in enumerate(
+                        get_gates_from_parameter(residue, control)
+                    ):
                         circuit_out.add_gate(gate)
                 else:
                     for i, gate in enumerate(get_gates_from_parameter(residue, target)):

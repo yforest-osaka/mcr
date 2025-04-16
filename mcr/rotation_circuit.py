@@ -19,6 +19,7 @@ from qiskit.quantum_info import Statevector
 # Qulacs関連
 from qulacs import QuantumCircuit, QuantumState
 from qulacs.circuit import QuantumCircuitOptimizer as QCO  # type: ignore
+from qulacs.converter import convert_qulacs_circuit_to_QASM
 from qulacs.gate import (  # type: ignore
     CNOT,
     SWAP,
@@ -35,12 +36,10 @@ from qulacs.gate import (  # type: ignore
 )
 from qulacs.state import inner_product  # type: ignore
 from qulacs_core import ClsOneQubitGate
-from qulacs.converter import convert_qulacs_circuit_to_QASM
 from qulacsvis import circuit_drawer as draw
 
 from mcr.circuit_ops import assign_gate_id_of_generated_gates
 from mcr.rot_class import RotOps
-
 
 
 class PauliRotationSequence:
@@ -71,7 +70,9 @@ class PauliRotationSequence:
         if isinstance(gate, str):
             gate = stim.PauliString(gate)
 
-        assert isinstance(gate, stim.PauliString), "The gate must be an instance of a stim.PauliString."
+        assert isinstance(
+            gate, stim.PauliString
+        ), "The gate must be an instance of a stim.PauliString."
         pauli_string_length = len(gate)
         diff = self.__n_qubit - pauli_string_length
         if diff > 0:
@@ -138,9 +139,16 @@ class PauliRotationSequence:
             plt.bar(list(data.keys()), list(data.values()), align="center")
             plt.xlabel("index")
             plt.ylabel("gate_count")
-        return collections.Counter(self.index_distribution)  # ゲートの入っていないようなqubitが存在してもworkする
+        return collections.Counter(
+            self.index_distribution
+        )  # ゲートの入っていないようなqubitが存在してもworkする
 
-    def get_all(self, target_id: tuple | bool = False, only_id: bool = False, include_position: bool = False) -> List:
+    def get_all(
+        self,
+        target_id: tuple | bool = False,
+        only_id: bool = False,
+        include_position: bool = False,
+    ) -> List:
         """全てのゲート列を取得するメソッド
 
         Args:
@@ -186,10 +194,14 @@ class PauliRotationSequence:
         Returns:
             list[tuple[int]]: ゲートのIDのリスト
         """
-        assert [data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums] == [
+        assert [
+            data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums
+        ] == [
             ele for i, ele in enumerate(self.gate_id_list) if i not in self.del_nums
         ], "The gate_id_list is not consistent with the gate_list!"
-        return [data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums]
+        return [
+            data[0] for i, data in enumerate(self.__gate_list) if i not in self.del_nums
+        ]
 
     def delete(self, position: int) -> None:
         """ゲート削除を行うメソッド
@@ -201,7 +213,9 @@ class PauliRotationSequence:
             ValueError: すでに削除されているゲートを削除しようとした場合
         """
         if position in self.del_nums:
-            raise ValueError(f"The position {position} is already included in del_nums!:{self.del_nums}")
+            raise ValueError(
+                f"The position {position} is already included in del_nums!:{self.del_nums}"
+            )
         self.del_nums.add(position)
         # index_distributionを更新(削除されるものを反映する)
         indices = self.__gate_list[position][1].pauli_indices()
@@ -310,7 +324,9 @@ class PauliRotationSequence:
         qulacs_circuit1 = self.set_circuit()
         qulacs_circuit2 = another_circuit.set_circuit()
         exclude_zx_checker = True
-        if equivalence_check_via_mqt_qcec(qulacs_circuit1, qulacs_circuit2, exclude_zx_checker, show_log=False):
+        if equivalence_check_via_mqt_qcec(
+            qulacs_circuit1, qulacs_circuit2, exclude_zx_checker, show_log=False
+        ):
             return True
         else:
             from mcr.circuit_ops import are_unitaries_equivalent, get_merged_matrix
@@ -327,7 +343,9 @@ class PauliRotationSequence:
         """
         tmp_circ = PauliRotationSequence(self.__n_qubit)
         tmp_circ.__gate_list = copy.deepcopy(self.__gate_list)  # gate_listのコピー
-        tmp_circ.index_distribution = copy.deepcopy(self.index_distribution)  # index_distributionのcopy
+        tmp_circ.index_distribution = copy.deepcopy(
+            self.index_distribution
+        )  # index_distributionのcopy
         tmp_circ.del_nums = self.del_nums.copy()  # del_numsのコピー
         return tmp_circ
 
