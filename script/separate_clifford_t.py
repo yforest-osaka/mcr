@@ -102,6 +102,19 @@ def stim_litinski_compile(qasm_filepath):
     return data
 
 
+# 保存
+def stim_data_to_txt_file(filepath, data):
+    with open(filepath, "w") as f:
+        for p in data:
+            f.write(str(p) + "\n")
+
+
+def txt_to_stim_data(filepath):
+    with open(filepath, "r") as f:
+        loaded_list = [stim.PauliString(line.strip()) for line in f]
+    return loaded_list
+
+
 def main():
 
     target_directory = Path("../external_data/qasm")
@@ -112,8 +125,12 @@ def main():
         print("Processing file:", file)
         st = time()
         data = stim_litinski_compile(file)
-        output_filepath = f"../external_data/rotops/{file.stem}.pickle"
-        save_by_pickle(output_filepath, data)
+        # output_filepath = f"../external_data/rotops/{file.stem}.pickle"
+        # save_by_pickle(output_filepath, data)
+        output_filepath = f"../external_data/rotops/{file.stem}.txt"
+        stim_data_to_txt_file(
+            output_filepath, data
+        )  # テキストファイルとして保存する形式に変更
         et = time()
         print(f"File {file} processed in {et - st:.2f} seconds.")
 
