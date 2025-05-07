@@ -22,13 +22,13 @@ Quantum circuit unoptimization operates on Python 3.11, and the required depende
 3. Use `uv` to install the dependencies and create a virtual environment:
 
     ```bash
-    uv install
+    uv venv
     ```
 
 4. Activate the virtual environment:
 
     ```bash
-    uv shell
+    source .venv/bin/activate
     ```
 
 Now your environment is ready for running the benchmarks.
