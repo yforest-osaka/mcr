@@ -116,10 +116,10 @@ def txt_to_stim_data(filepath):
 
 
 def main():
-
     target_directory = Path("../external_data/qasm")
     files = list(target_directory.glob("*.qasm"))
-    cpu_count = 12
+    cpu_count = 10
+    # files = [Path("../external_data/qasm/gf2^64_mult.qasm")]
 
     def process_file(file):
         print("Processing file:", file)

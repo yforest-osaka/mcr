@@ -109,7 +109,7 @@ def optimization_process(
 
 # Implementation of the algorithm to divide into T layers (arXiv:2407.08695 Algorithm 1)
 def stim_grouping_of_pauli_rotations(stim_data_lst, joint=False):
-    length = len(stim_data_lst)
+    # length = len(stim_data_lst)
     # print('length', length)
     L = []  # Empty list L
     for Rp in stim_data_lst:

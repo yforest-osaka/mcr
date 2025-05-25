@@ -100,7 +100,6 @@ def pyzx_optimization(qasm_filepath_u, qasm_filepath_v):
 
 
 def tmerge_optimization(nqubits, input_seq, unopted_seq):
-
     input_seq_stim = input_seq.sort_gate_sequence(only_gates=True)
     unopted_seq_stim = unopted_seq.sort_gate_sequence(only_gates=True)
 

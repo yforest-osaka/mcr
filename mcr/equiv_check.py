@@ -11,7 +11,6 @@ from mcr.filesave import qulacs_to_qasm
 
 
 def get_qubit_count_from_qasm_file(filepath):
-
     # Read the file
     with open(filepath, "r") as file:
         content = file.read()
@@ -72,3 +71,13 @@ def equivalence_check_via_mqt_qcec(
     if show_log:
         print(result.name)
     return result.name in {"equivalent", "equivalent_up_to_global_phase"}
+
+
+def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
+    nqubits = len(pauli_bit_lst_1[0].get_pauli_str())
+    circuit_1, circuit_2 = QuantumCircuit(nqubits), QuantumCircuit(nqubits)
+    for elem in pauli_bit_lst_1:
+        circuit_1.merge_circuit(elem.convert_into_qulacs())
+    for elem in pauli_bit_lst_2:
+        circuit_2.merge_circuit(elem.convert_into_qulacs())
+    return equivalence_check_via_mqt_qcec(circuit_1, circuit_2, exclude_zx_checker=True)
