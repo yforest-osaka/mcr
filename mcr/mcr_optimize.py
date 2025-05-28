@@ -40,6 +40,8 @@ def _sign(pb: PauliBit) -> int:
     return 1 if pb.get_angle() > 0 else -1
 
 
+# D=ABCとなるパターンを調べる→符号を確認してCliffordの追加が必要かどうかを判断する
+# っていうような形に書き換えたい
 def find_mcr(
     left_bits: list[PauliBit],
     right_bits: list[PauliBit],
