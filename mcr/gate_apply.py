@@ -84,6 +84,7 @@ class PauliBit:
         Raises:
             ValueError: If pauli_str contains invalid characters or angle is 0.
         """
+        pauli_str = pauli_str.upper()
         try:
             self.x_n, self.z_n = zip(*[self._pauli_map[p] for p in pauli_str])
         except KeyError:
@@ -495,18 +496,23 @@ def loop_optimization(pauli_bit_list, show_log=True):
             tmp = zhang_optimization(elem)
             non_clifford_rots_group.append(tmp[0])
             extracted_clifford_group.append(tmp[1])
-
-        for i in range(len(non_clifford_rots_group)):
-            clifford_seq = extracted_clifford_group[i]
-            if len(clifford_seq) > 0 and len(updated_rots) > 0:
-                updated_rots = [
-                    ele.clifford_update(clifford_gate_sequence=clifford_seq)
-                    for ele in updated_rots
-                ]
-                updated_rots += non_clifford_rots_group[i]
-                clifford_data += clifford_seq
-            else:
-                updated_rots += non_clifford_rots_group[i]
+        if (
+            sum(non_clifford_rots_group, []) != []
+        ):  # Cliffordを外側に移すためにnon-Cliffordをupdate
+            for i in range(len(non_clifford_rots_group)):
+                clifford_seq = extracted_clifford_group[i]
+                if len(clifford_seq) > 0 and len(updated_rots) > 0:
+                    updated_rots = [
+                        ele.clifford_update(clifford_gate_sequence=clifford_seq)
+                        for ele in updated_rots
+                    ]
+                    updated_rots += non_clifford_rots_group[i]
+                    clifford_data += clifford_seq
+                else:
+                    updated_rots += non_clifford_rots_group[i]
+        else:  # non-Cliffordがの個数が0になり、Cliffordだけが残っている場合
+            for clifford in extracted_clifford_group:
+                clifford_data += clifford
         if len(updated_rots) < length:
             length = len(updated_rots)
             pauli_bit_list = updated_rots
