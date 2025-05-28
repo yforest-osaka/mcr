@@ -24,7 +24,7 @@ def mcr_swap(pauli_bit_groups):
                 for gates in sols:
                     gate_a, gate_b, gate_c, gate_d = [gate[1:] for gate in gates]
                     # print(
-                    # f"MCR swap!: {i}, {i + 1} -> {gate_a}, {gate_b}, {gate_c}, {gate_d}"
+                    #     f"MCR swap!: {i}, {i + 1} -> {gate_a}, {gate_b}, {gate_c}, {gate_d}"
                     # )
                     left_data_for_swap, reduced_left_data = [], []
                     for ele in left_data:
@@ -46,12 +46,23 @@ def mcr_swap(pauli_bit_groups):
                     assert len(right_data_for_swap) == 2, (
                         f"Expected 2 elements for swap, got {len(right_data_for_swap)}"
                     )
-                    pauli_bit_groups[i] = reduced_left_data + right_data_for_swap
-                    pauli_bit_groups[i + 1] = left_data_for_swap + reduced_right_data
-                    removed_group_indices.add(i + 1)
-                    removed_group_indices.add(i + 2)  # もしかしてここが重要!?
-                    counter += 1
-                    break
+                    # 最後に角度の条件を満たすかチェック。満たさなければ入れ替えを行わない
+                    angle_a = left_data_for_swap[0].get_angle()
+                    angle_b = left_data_for_swap[1].get_angle()
+                    angle_c = right_data_for_swap[0].get_angle()
+                    angle_d = right_data_for_swap[1].get_angle()
+                    if abs(angle_a) == abs(angle_b) and abs(angle_c) == abs(angle_d):
+                        pauli_bit_groups[i] = reduced_left_data + right_data_for_swap
+                        pauli_bit_groups[i + 1] = (
+                            left_data_for_swap + reduced_right_data
+                        )
+                        removed_group_indices.add(i + 1)
+                        # removed_group_indices.add(i + 2)  # もしかしてここが重要!?
+                        counter += 1
+                        break
+                    else:
+                        # 角度の条件を満たさない場合は入れ替えを行わない
+                        continue
     new_data = sum(pauli_bit_groups, [])
     # print(f"Total MCR swaps made: {counter}")
     return new_data
@@ -73,6 +84,9 @@ def three_layer_nontrivial_swap(pauli_bit_groups):
                 removed_group_indices.add(i + 1)
                 removed_group_indices.add(i + 2)
     new_data = sum(pauli_bit_groups, [])
+    # assert equiv([[], sum(initial, [])], [[], new_data]), (
+    #     "The optimization result is not equivalent to the original data.: Three-layer swap failed"
+    # )
     return new_data
 
 
@@ -84,17 +98,26 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
     flag = True
     length = len(data_for_optimization)
     while flag and len(data_for_optimization) > 0:
+        initial = data_for_optimization.copy()
         groups = grouping(data_for_optimization)
         # groupingした後にfind_nontrivial_swapを適用し、loop_optimizationを行う
         swapped_new_data = three_layer_nontrivial_swap(groups)
         clifford_1, data_for_optimization = loop_optimization(
             swapped_new_data, show_log=False
         )
-
+        # print("data info:")
+        # print(swapped_new_data)
+        # print(clifford_1)
+        # print(data_for_optimization)
+        # print("---" * 20)
+        # assert equiv([[], swapped_new_data], [clifford_1, data_for_optimization]), (
+        #     "The optimization result is not equivalent to the original data."
+        # )
         new_data = mcr_swap(grouping(data_for_optimization))
         clifford_2, data_for_optimization = loop_optimization(new_data, show_log=False)
         clifford_lst.extend(clifford_1)
         clifford_lst.extend(clifford_2)
+
         if len(data_for_optimization) >= length:
             flag = False
         else:
@@ -110,13 +133,13 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
 
 def main():
     filetype = "seq"  # "small" or "seq"
-    num_samples = 100
+    num_samples = 1000
     nqubits = 2
     with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
     unopt_iteration_count = 2
     for _ in tqdm(
-        range(num_samples), desc=f"Processing {filetype} circuits with {nqubits} qubits"
+        range(num_samples), desc=f"Processing circuits with {nqubits} qubits"
     ):
         # gen unopt circuit
         input_seq = PauliRotationSequence(nqubits)
@@ -144,7 +167,7 @@ def main():
                 data.append(PauliBit(pauli_str, -np.pi / 4))
         data.append(PauliBit("Z" * nqubits, -np.pi / 4))  # Add identity gate
         st = time()
-        clifford_lst, optimized_data = test_algorithm(data)
+        clifford_lst, optimized_data = test_algorithm(data, show_opt_log=False)
         ed = time()
         if len(optimized_data) > 0:
             print("found!!!", len(optimized_data), "gates")

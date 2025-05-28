@@ -48,6 +48,7 @@ def find_mcr(
     left_bits, right_bits は PauliBit インスタンスのリスト。
     元の find_quadruples と同じ (A, B, C, D) のタプルリストを返します。
     出力文字列はすべて get_pauli_str(with_sgn=True) 形式です。
+    角度の条件がここでは課されていないことに注意！
     """
 
     # —— 右側パターン→符号集合マップ ——
@@ -117,8 +118,13 @@ def find_nontrivial_swap(
 ):
     # ) -> tuple(list[PauliBit], list[PauliBit], list[PauliBit]):
     # check  A | B, C | D = D | B, C | A
+    # 角度の条件がここでは課されていないことに注意！
     # とりあえず中央の要素数は2に限定
     if len(center_bits) != 2:
+        return None
+    angle_b = center_bits[0].get_angle()
+    angle_c = center_bits[1].get_angle()
+    if abs(angle_b) != abs(angle_c):
         return None
 
     for l_idx, left_bit in enumerate(left_bits):
@@ -134,6 +140,7 @@ def find_nontrivial_swap(
         A_raw = left_bit.get_pauli_str(with_sgn=True)
         B_raw = center_bits[0].get_pauli_str(with_sgn=True)
         C_raw = center_bits[1].get_pauli_str(with_sgn=True)
+        angle_a = left_bit.get_angle()
 
         phase_ab, pat_ab = _mult(
             (_sign(left_bit), A),
@@ -151,13 +158,15 @@ def find_nontrivial_swap(
         # phase_d, pat_dがright_bitsにいるか？
         for r_idx, right_bit in enumerate(right_bits):
             target_pat = right_bit.get_pauli_str(with_sgn=False)
-
+            angle_d = right_bit.get_angle()
+            if abs(angle_d) != abs(angle_a):
+                continue
             if target_pat == pat_d:  # 発見！
                 angle = right_bit.get_angle()
                 sign = np.sign(angle)
                 if sign == phase_d:  # 符号も一致する場合
                     # そのまま場所を入れ替えても等価
-                    # print("equiv_check in swap case")
+                    # print("in swap case")
                     return (
                         left_bits[:l_idx] + left_bits[l_idx + 1 :] + [right_bit],
                         center_bits,
@@ -167,6 +176,7 @@ def find_nontrivial_swap(
                     assert sign == -phase_d, (
                         "Sign mismatch: expected sign to be the negative of phase_d"
                     )  # 符号は逆
+                    # print("update case")
                     # right_bitsに新たな要素を追加して入れ替える
                     # new_right = (
                     #     [left_bit] + right_bits[:r_idx] + right_bits[r_idx + 1 :]

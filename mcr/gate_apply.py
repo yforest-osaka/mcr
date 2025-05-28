@@ -451,7 +451,25 @@ def separate_clifford_and_rotation(pauli_bit_data_lst):
         if elem.is_clifford():
             clifford_gates += elem.get_clifford_gate_sequence()
         else:
-            rotation_gates.append(elem)
+            # angleがpi/2を超えるもの、もしくは-np.pi/2を下回るものは分割してCliffordとnon-Cliffordに分けてappendしたい
+            angle = elem.get_angle()
+            if angle > np.pi / 2:
+                assert angle < np.pi
+                residue_angle = angle - np.pi / 2
+                clifford_gates += PauliBit(
+                    elem.get_pauli_str(), np.pi / 2
+                ).get_clifford_gate_sequence()
+                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+                # 分割してCliffordとnon-Cliffordに分ける
+            elif angle < -np.pi / 2:
+                assert angle > -np.pi
+                residue_angle = angle + np.pi / 2
+                clifford_gates += PauliBit(
+                    elem.get_pauli_str(), -np.pi / 2
+                ).get_clifford_gate_sequence()
+                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+            else:
+                rotation_gates.append(elem)
     return clifford_gates, rotation_gates
 
 
