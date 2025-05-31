@@ -1,17 +1,16 @@
-[PauliBit(0.7853981633974483*ZY),
-PauliBit(-0.7853981633974483*ZZ),
-#PauliBit(0.7853981633974483*YY),
-PauliBit(-0.7853981633974483*IX),
-PauliBit(0.7853981633974483*XI),
-#PauliBit(2.356194490192345*ZZ),
-PauliBit(0.7853981633974483*YY),]
+[PauliBit(-np.pi/4*XYY),#
+PauliBit(np.pi/4*ZXI),#
+PauliBit(-np.pi/4*XXY),
+PauliBit(-np.pi/4*ZYI)]
 
+[PauliBit(-np.pi/4*XIZ),#
+PauliBit(-np.pi/4*ZZX)]#
 
-After three-layer swap:
-[PauliBit(0.7853981633974483*ZY),
-PauliBit(-0.7853981633974483*ZZ),
-PauliBit(2.356194490192345*ZZ),
-PauliBit(-0.7853981633974483*IX),
-PauliBit(0.7853981633974483*XI),
-PauliBit(0.7853981633974483*YY),
-PauliBit(0.7853981633974483*YY),]
+[PauliBit(-np.pi/4*XXY),
+PauliBit(-np.pi/4*ZYI),
+PauliBit(-1.5707963267948966*XYY),
+PauliBit(-np.pi/4*XIZ),#
+PauliBit(-np.pi/4*ZZX)],#
+
+[PauliBit(np.pi/4*XYY),#
+PauliBit(np.pi/4*ZXI)]#

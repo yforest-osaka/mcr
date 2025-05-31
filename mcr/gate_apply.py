@@ -1,4 +1,5 @@
 from typing import List, Tuple
+from itertools import combinations
 import numpy as np
 from qulacs import QuantumCircuit
 from qiskit import QuantumCircuit as QiskitCircuit
@@ -92,9 +93,9 @@ class PauliBit:
         self.x_n: List[int] = list(self.x_n)
         self.z_n: List[int] = list(self.z_n)
 
-        if angle == 0:
-            raise ValueError("Angle cannot be zero.")
-        self.sgn: int = 0 if angle > 0 else 1
+        # if angle == 0:
+        #     raise ValueError("Angle cannot be zero.")
+        self.sgn: int = 0 if angle >= 0 else 1
         self.__angle: float = abs(angle)
 
     def duplicate(self) -> "PauliBit":
@@ -124,6 +125,16 @@ class PauliBit:
             else:
                 return f"+{pauli_str}"
         return pauli_str
+
+    def set_new_angle(self, angle: float) -> None:
+        """
+        Sets a new angle for the PauliBit.
+
+        Args:
+            angle (float): New angle to set.
+        """
+        self.sgn = 0 if angle >= 0 else 1
+        self.__angle = abs(angle)
 
     def get_angle(self) -> float:
         """
@@ -394,6 +405,40 @@ class PauliBit:
         return string[3:]
 
 
+def multiply_all(pauli_bit_lst: List["PauliBit"]) -> Tuple[float, str]:
+    coef = 1
+    pauli_str = ""
+    nqubits = len(pauli_bit_lst[0].x_n)
+    x_n = [0 for _ in range(nqubits)]
+    z_n = [0 for _ in range(nqubits)]
+    for pb in pauli_bit_lst:
+        if not isinstance(pb, PauliBit):
+            raise TypeError(f"Expected PauliBit, got {type(pb)}")
+        new_x_n = [(x1 ^ x2) for x1, x2 in zip(x_n, pb.x_n)]
+        new_z_n = [(z1 ^ z2) for z1, z2 in zip(z_n, pb.z_n)]
+        if pb.sgn == 1:  # negative case
+            coef *= -1
+        s = 0
+        for x_1, z_1, x_2, z_2, x_3, z_3 in zip(
+            x_n, z_n, pb.x_n, pb.z_n, new_x_n, new_z_n
+        ):
+            s += 2 * x_1 * z_2 + z_1 * x_1 + z_2 * x_2 - z_3 * x_3
+        s %= 4
+        coef *= [1, -1j, -1, 1j][s]
+        x_n, z_n = new_x_n, new_z_n
+
+    for x, z in zip(x_n, z_n):
+        if x == 0 and z == 0:
+            pauli_str += "I"
+        elif x == 1 and z == 0:
+            pauli_str += "X"
+        elif x == 0 and z == 1:
+            pauli_str += "Z"
+        elif x == 1 and z == 1:
+            pauli_str += "Y"
+    return coef, pauli_str
+
+
 def grouping(pauli_bit_data_lst):
     L = []  # Empty list L
     for Rp in pauli_bit_data_lst:
@@ -418,6 +463,10 @@ def grouping(pauli_bit_data_lst):
             else:
                 # Add to an existing group
                 L[j].append(Rp)
+    # for group in L:
+    #     commute_check = [ele1.commutes(ele2) for ele1, ele2 in combinations(group, 2)]
+    #     if not all(commute_check):
+    #         raise ValueError(f"Grouping failed: some elements do not commute.: {group}")
     return L
 
 
@@ -528,6 +577,7 @@ def loop_optimization(pauli_bit_list, show_log=True):
                     clifford_data += clifford_seq
                 else:
                     updated_rots += non_clifford_rots_group[i]
+                    clifford_data += clifford_seq
         else:  # non-Cliffordがの個数が0になり、Cliffordだけが残っている場合
             for clifford in extracted_clifford_group:
                 clifford_data += clifford
