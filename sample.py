@@ -50,6 +50,7 @@ def main():
         cli, tmp2 = test_algorithm(target, show_opt_log=False)
         if equiv([cli, tmp2], [[], optimized_data]) and len(tmp2) < len(target):
             print("New length:", len(tmp2))
+            print(tmp2)
             return tmp2
         return None
 
