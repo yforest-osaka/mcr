@@ -20,11 +20,11 @@ from opt_using_mcr import test_algorithm
 
 def main():
     filetype = "seq"  # "small" or "seq"
-    num_samples = 1000
-    nqubits = 3
+    num_samples = 100
+    nqubits = 2
     with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
-    unopt_iteration_count = 3
+    unopt_iteration_count = 5
     for _ in tqdm(
         range(num_samples), desc=f"Processing circuits with {nqubits} qubits"
     ):
@@ -58,7 +58,7 @@ def main():
         st = time()
         clifford_lst, optimized_data = test_algorithm(data, show_opt_log=False)
         ed = time()
-        if len(optimized_data) > 0 and len(optimized_data) < 12:
+        if len(optimized_data) > 0:
             print("found!!!", len(optimized_data), "gates")
             break
         # print(f"Optimization time: {ed - st} seconds")

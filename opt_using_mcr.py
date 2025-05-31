@@ -73,13 +73,14 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
     clifford_lst = []
     clifford, data_for_optimization = loop_optimization(pauli_bit_lst, show_log=False)
     clifford_lst.extend(clifford)
-    flag = 2
-    mcr_flag = True
+    flag = 100
+    mcr_flag = flag
     length = len(data_for_optimization)
     k = 1
     while flag > 0 and length > 0:
         # print(k, "th iteration")
         # print("flag_value:", flag)
+        # print("mcr_flag_value:", mcr_flag)
         initial = deepcopy(data_for_optimization)
         groups = grouping(data_for_optimization)
         # groupingした後にfind_nontrivial_swapを適用し、loop_optimizationを行う
@@ -99,19 +100,26 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
         if len(data_for_optimization) == 0:
             # print("No data left after swap!")
             clifford_lst.extend(clifford_1)
-            flag -= 2
-            mcr_flag = False
+            flag = 0
+            mcr_flag = 0
 
-        if mcr_flag:
+        if mcr_flag > 0:
             new_data = mcr_swap(grouping(data_for_optimization))
             clifford_2, data_for_optimization = loop_optimization(
                 new_data, show_log=False
             )
+            # print(f"Length after swap: {len(data_for_optimization)}")
+            # print(data_for_optimization)
             clifford_lst.extend(clifford_1)
             clifford_lst.extend(clifford_2)
         # print(f"Length after MCR swap: {len(data_for_optimization)}, {length}")
         if len(data_for_optimization) >= length:
             flag -= 1
+            mcr_flag -= 1
+            if show_opt_log:
+                print(
+                    f"🔍 No optimization found in {k}th iteration. Try {mcr_flag + 1} times left... {length} -> {len(data_for_optimization)}"
+                )
         else:
             if show_opt_log:
                 print(
@@ -120,7 +128,7 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
             length = len(data_for_optimization)
             k += 1
             if length == 0:
-                flag -= 2
+                flag = 0
 
     #
 
@@ -129,7 +137,7 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
 
 def main():
     filetype = "seq"  # "small" or "seq"
-    nqubits = 2
+    nqubits = 3
     # with open(f"unopt_{filetype}.pickle", "rb") as f:
     with open(f"unopt_{nqubits}.pickle", "rb") as f:
         seq = pickle.load(f)

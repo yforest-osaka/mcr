@@ -556,7 +556,6 @@ def loop_optimization(pauli_bit_list, show_log=True):
     k = 0
     while flag:
         updated_rots = []
-        k += 1
         grouping_data = grouping(pauli_bit_list)
         non_clifford_rots_group, extracted_clifford_group = [], []
         for elem in grouping_data:
@@ -582,10 +581,11 @@ def loop_optimization(pauli_bit_list, show_log=True):
             for clifford in extracted_clifford_group:
                 clifford_data += clifford
         if len(updated_rots) < length:
+            k += 1
             length = len(updated_rots)
             pauli_bit_list = updated_rots
         else:
-            if show_log:
+            if show_log and k > 0:
                 print("=" * 40)
                 print(f"{k}-iteration optimization applied!")
                 print(f"optimization result: {initial_length} -> {len(updated_rots)}")
