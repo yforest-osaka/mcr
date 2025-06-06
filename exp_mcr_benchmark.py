@@ -60,9 +60,9 @@ def main():
 
     with_swap_option = False  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     if with_swap_option:
-        folder_name = "../results_with_swap"
+        folder_name = "results_with_swap"
     else:
-        folder_name = "../results"
+        folder_name = "results"
     # Number of iterations for the unoptimized circuit
     unopt_iteration_count = nqubits**2
     ############################

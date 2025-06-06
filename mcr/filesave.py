@@ -9,7 +9,7 @@ from qulacs.converter import convert_qulacs_circuit_to_QASM
 def mkdir_tmp_if_not_exists():
     """Create the 'tmp' directory if it does not exist"""
     if not os.path.exists("tmp"):
-        os.makedirs("tmp")
+        os.makedirs("tmp", exist_ok=True)
 
 
 def qulacs_to_qasm(filepath: str, qulacs_circ: QuantumCircuit) -> None:

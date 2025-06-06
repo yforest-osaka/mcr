@@ -12,3 +12,6 @@ input_data/*
 external_data/*
 # mcr_opt_dev.ipynb
 # opt_using_mcr.py
+pbse/*
+pbso/*
+tmp/*
