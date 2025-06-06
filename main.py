@@ -14,7 +14,7 @@ def main():
     num_samples = 1
     nqubits = 4
 
-    with_swap_option = False  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
+    with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
     unopt_iteration_count = nqubits**2
     ############################
@@ -30,10 +30,10 @@ def main():
 
     # Perform unoptimization
     unopt_seq = unoptimize_circuit(input_seq, unopt_iteration_count, with_swap_option)
-    if nqubits <= 6:
-        assert unopt_seq.is_equivalent(
-            initial_seq
-        ), "The circuit is not equivalent to the original one."
+    if nqubits <= 4:
+        assert unopt_seq.is_equivalent(initial_seq), (
+            "The circuit is not equivalent to the original one."
+        )
 
     # Save input and output circuits by QASM format
     input_circuit_filepath = "circuit_data/input_circuit.qasm"

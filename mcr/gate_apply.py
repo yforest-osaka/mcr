@@ -3,7 +3,7 @@ from itertools import combinations
 import numpy as np
 from qulacs import QuantumCircuit
 from qiskit import QuantumCircuit as QiskitCircuit
-from qulacs.gate import RotZ, S, Sdag, H, X, Y, Z, CNOT, CZ
+from qulacs.gate import RotZ, S, Sdag, H, X, Y, Z, CNOT, CZ, SWAP
 from qiskit.circuit.library import (
     RZZGate,
     RZGate,
@@ -602,6 +602,8 @@ def set_clifford_to_qulacs(qulacs_circuit, data_lst):
             qulacs_circuit.add_gate(CNOT(qubit_indices[0], qubit_indices[1]))
         elif gate_name == "CZ":
             qulacs_circuit.add_gate(CZ(qubit_indices[0], qubit_indices[1]))
+        elif gate_name == "SWAP":
+            qulacs_circuit.add_gate(SWAP(qubit_indices[0], qubit_indices[1]))
         elif gate_name == "H":
             qulacs_circuit.add_gate(H(qubit_indices[0]))
         elif gate_name == "S":

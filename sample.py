@@ -48,15 +48,22 @@ def main():
     def process_perm(perm):
         target = sum(perm, [])
         cli, tmp2 = test_algorithm(target, show_opt_log=False)
-        if equiv([cli, tmp2], [[], optimized_data]) and len(tmp2) < len(target):
-            print("New length:", len(tmp2))
-            print(tmp2)
+        if equiv([[], optimized_data], [cli, tmp2]) and len(tmp2) < len(target):
             return tmp2
         return None
 
     perms = list(permutations(tmp))
-    results = Parallel(n_jobs=5)(delayed(process_perm)(perm) for perm in tqdm(perms))
-    results = [r for r in results if r is not None]
+    found = False
+    for idx, perm in enumerate(tqdm(perms)):
+        result = process_perm(perm)
+        if result is not None:
+            print(f"Found at candidate #{idx}:")
+            print("New length:", len(result))
+            print(result)
+            found = True
+            break
+    if not found:
+        print("No candidate satisfied the condition.")
 
 
 if __name__ == "__main__":

@@ -1,16 +1,26 @@
-[PauliBit(-np.pi/4*XYY),#
-PauliBit(np.pi/4*ZXI),#
-PauliBit(-np.pi/4*XXY),
-PauliBit(-np.pi/4*ZYI)]
+[PauliBit(-np.pi/4 * ZY)],
+ [PauliBit(-np.pi/4 * IX), PauliBit(-np.pi/4 * ZI)],
+ [PauliBit(np.pi/4 * IX), PauliBit(np.pi/4 * XI)],
+ [PauliBit(np.pi/4 * XY)],
+ [PauliBit(-np.pi/4 * YY), PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(-np.pi/4 * XZ)],#
+ [PauliBit(-np.pi/4 * YZ)]#
 
-[PauliBit(-np.pi/4*XIZ),#
-PauliBit(-np.pi/4*ZZX)]#
+ ([PauliBit(-np.pi/4 * ZY)],
+ [PauliBit(-np.pi/4 * IX), PauliBit(-np.pi/4 * ZI)],
+ [PauliBit(np.pi/4 * IX), PauliBit(np.pi/4 * XI)],
+ [PauliBit(np.pi/4 * XY)],
+ [PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(-np.pi/4 * YY), PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(-np.pi/4 * XZ)],#
+ [PauliBit(-np.pi/4 * YZ)])#
 
-[PauliBit(-np.pi/4*XXY),
-PauliBit(-np.pi/4*ZYI),
-PauliBit(-1.5707963267948966*XYY),
-PauliBit(-np.pi/4*XIZ),#
-PauliBit(-np.pi/4*ZZX)],#
-
-[PauliBit(np.pi/4*XYY),#
-PauliBit(np.pi/4*ZXI)]#
+ ([PauliBit(-np.pi/4 * ZY)],
+ [PauliBit(-np.pi/4 * IX), PauliBit(-np.pi/4 * ZI)],
+ [PauliBit(np.pi/4 * IX), PauliBit(np.pi/4 * XI)],
+ [PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(np.pi/4 * XY)],#
+ [PauliBit(-np.pi/4 * YY), PauliBit(-np.pi/4 * ZZ)],#
+ [PauliBit(-np.pi/4 * XZ)],#
+ [PauliBit(-np.pi/4 * YZ)])#
