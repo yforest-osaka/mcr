@@ -138,7 +138,7 @@ def analyze_qc_file(filepath):
     return ancilla_count, T_count
 
 
-def fasttodd_optimization(unopted_circuit_filepath):
+def fasttodd_optimization(unopted_circuit_filepath, timeout=200000, poll_interval=0.5):
     mkdir_tmp_if_not_exists()
     tmp_qc_filepath = f"tmp/{uuid4()}.qc"
     abs_tmp_qc_filepath = str(Path(tmp_qc_filepath).resolve())
@@ -160,7 +160,19 @@ def fasttodd_optimization(unopted_circuit_filepath):
         stderr=subprocess.PIPE,
     )
 
-    stdout, stderr = process.communicate()
+    # ファイル生成を最大 `timeout` 秒までポーリングで待機
+    start_time = time.time()
+    while not os.path.exists(output_filepath):
+        if time.time() - start_time > timeout:
+            process.terminate()
+            os.chdir("..")
+            raise TimeoutError(
+                f"Output file {output_filepath} was not found within {timeout} seconds."
+            )
+        time.sleep(poll_interval)
+
+    # 子プロセスが終了するのを待つ（確実に完了させるため）
+    process.wait()
     os.chdir("..")  # Change back to the original directory
 
     if os.path.exists(output_filepath):
