@@ -53,7 +53,7 @@ def fasttodd_process(qasm_filepath_v):
 
 def main():
     ### Input information (parameters) ###
-    num_samples = 10
+    num_samples = 30
     nqubits = int(sys.argv[1])  # Number of qubits, e.g., 3, 4, 5, etc.
     cpu_count = -1  # Number of CPU cores to use for the optimization
     # nqubits = 3
@@ -148,7 +148,7 @@ def main():
     df.to_csv(f"{folder_name}/n={nqubits}_k={nqubits**2}.csv", index=False)
 
     # FastTODD optimization
-    truncation = int(num_samples * 0.3)
+    truncation = int(num_samples * 1.0)
     result_fasttodd = Parallel(n_jobs=cpu_count)(
         delayed(fasttodd_process)(unopted_circuit_filepath)
         for unopted_circuit_filepath in tqdm(

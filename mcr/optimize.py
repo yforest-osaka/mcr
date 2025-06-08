@@ -153,40 +153,15 @@ def fasttodd_optimization(unopted_circuit_filepath):
 
     # Define the output file path beforehand
     output_filepath = str(Path(f"{work_dir}/circuits/outputs/{filename}").resolve())
-
-    # Execute the Rust command asynchronously
-    cmd = ["cargo", "+nightly", "run", "--release", abs_tmp_qc_filepath]
+    os.chdir(work_dir)
     process = subprocess.Popen(
-        cmd, cwd=work_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        ["cargo", "+nightly", "run", "-r", abs_tmp_qc_filepath],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
 
-    # print(f"Running command: {' '.join(cmd)}")
-    # print(f"Waiting for output file: {output_filepath}")
-
-    # Wait for the file to be generated (maximum 60 seconds)
-    timeout = 600  # seconds
-    interval = 0.5  # polling interval
-    elapsed = 0
-
-    while not os.path.exists(output_filepath):
-        time.sleep(interval)
-        elapsed += interval
-        if elapsed >= timeout:
-            print("Timeout: Output file was not generated")
-            break
-
-    # Terminate the Rust process if it's still running after the file is generated
-    if process.poll() is None:
-        process.terminate()
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            process.kill()
-
-    # Optionally log output (optional)
     stdout, stderr = process.communicate()
-    # print("Rust stdout:\n", stdout)
-    # print("Rust stderr:\n", stderr)
+    os.chdir("..")  # Change back to the original directory
 
     if os.path.exists(output_filepath):
         ancilla, T = analyze_qc_file(output_filepath)
