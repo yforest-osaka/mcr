@@ -106,16 +106,23 @@ def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
 def equiv(seq_1: list, seq_2: list):
     clifford_lst_1, non_clifford_pauli_bits_1 = seq_1
     clifford_lst_2, non_clifford_pauli_bits_2 = seq_2
-    nqubits = len(non_clifford_pauli_bits_1[0].get_pauli_str())
+    if len(non_clifford_pauli_bits_1) > 0:
+        nqubits = len(non_clifford_pauli_bits_1[0].get_pauli_str())
+    else:
+        nqubits = len(non_clifford_pauli_bits_2[0].get_pauli_str())
     if nqubits > 10:
         return True
     circuit_1, circuit_2 = QuantumCircuit(nqubits), QuantumCircuit(nqubits)
-    circuit_1 = set_clifford_to_qulacs(circuit_1, clifford_lst_1)
-    for elem in non_clifford_pauli_bits_1:
-        circuit_1.merge_circuit(elem.convert_into_qulacs())
-    circuit_2 = set_clifford_to_qulacs(circuit_2, clifford_lst_2)
-    for elem in non_clifford_pauli_bits_2:
-        circuit_2.merge_circuit(elem.convert_into_qulacs())
+    if len(clifford_lst_1) > 0:
+        circuit_1 = set_clifford_to_qulacs(circuit_1, clifford_lst_1)
+    if len(non_clifford_pauli_bits_1) > 0:
+        for elem in non_clifford_pauli_bits_1:
+            circuit_1.merge_circuit(elem.convert_into_qulacs())
+    if len(clifford_lst_2) > 0:
+        circuit_2 = set_clifford_to_qulacs(circuit_2, clifford_lst_2)
+    if len(non_clifford_pauli_bits_2) > 0:
+        for elem in non_clifford_pauli_bits_2:
+            circuit_2.merge_circuit(elem.convert_into_qulacs())
     return equivalence_check_via_mqt_qcec(
         circuit_1, circuit_2, exclude_zx_checker=True, show_log=False
     )

@@ -3,42 +3,6 @@ import numpy as np
 from mcr.gate_apply import PauliBit, multiply_all
 from mcr.equiv_check import pauli_bit_equivalence_check
 
-# ── 1. 1-qubit の積テーブル ──────────────────────────────
-_TABLE = {
-    ("I", "I"): ("I", 1),
-    ("I", "X"): ("X", 1),
-    ("I", "Y"): ("Y", 1),
-    ("I", "Z"): ("Z", 1),
-    ("X", "I"): ("X", 1),
-    ("Y", "I"): ("Y", 1),
-    ("Z", "I"): ("Z", 1),
-    ("X", "X"): ("I", 1),
-    ("Y", "Y"): ("I", 1),
-    ("Z", "Z"): ("I", 1),
-    ("X", "Y"): ("Z", 1j),
-    ("Y", "Z"): ("X", 1j),
-    ("Z", "X"): ("Y", 1j),
-    ("Y", "X"): ("Z", -1j),
-    ("Z", "Y"): ("X", -1j),
-    ("X", "Z"): ("Y", -1j),
-}
-
-
-def _mult(op1, op2):
-    """(±1,'P'),(±1,'Q') → (phase, pattern)"""
-    (s1, p1), (s2, p2) = op1, op2
-    phase, out, extra = s1 * s2, [], 1
-    for a, b in zip(p1, p2):
-        c, phi = _TABLE[(a, b)]
-        out.append(c)
-        extra *= phi
-    return phase * extra, "".join(out)
-
-
-# —— ヘルパー ——
-def _sign(pb: PauliBit) -> int:
-    return 1 if pb.get_angle() > 0 else -1
-
 
 # D=ABCとなるパターンを調べる→符号を確認してCliffordの追加が必要かどうかを判断する
 # っていうような形に書き換えたい
@@ -131,7 +95,7 @@ def find_nontrivial_swap(
     angle_c = pauli_C.get_angle()
     if abs(angle_b) != abs(angle_c):
         return None
-
+    solutions = []
     for l_idx, pauli_A in enumerate(left_bits):
         angle_a = pauli_A.get_angle()
         parity_lst = [
@@ -165,15 +129,24 @@ def find_nontrivial_swap(
                 if sgn == sign_d:  # 符号も一致する場合 (D = ABC, only swap)
                     # そのまま場所を入れ替えても等価
                     # print("3layer swap only")
+                    # print(
+                    #     f"left_bits: {left_bits[l_idx]}, right_bits: {right_bits[r_idx]}"
+                    # )
                     left_bits.pop(l_idx)
                     right_bits.pop(r_idx)
-                    return (
-                        left_bits + [pauli_D],
-                        center_bits,
-                        [pauli_A] + right_bits,
+                    # return (
+                    #     left_bits + [pauli_D],
+                    #     center_bits,
+                    #     [pauli_A] + right_bits,
+                    # )
+                    solutions.append(
+                        [left_bits + [pauli_D], center_bits, [pauli_A] + right_bits]
                     )
                 else:
                     assert sgn + sign_d == 1, "Sign mismatch"  # 符号は逆 (D = -ABC)
+                    # print(
+                    #     f"left_bits: {left_bits[l_idx]}, right_bits: {right_bits[r_idx]}"
+                    # )
                     left_bits.pop(l_idx)
                     right_bits.pop(r_idx)
                     #! ここをupdate(Aを分割する)
@@ -185,5 +158,10 @@ def find_nontrivial_swap(
                         pauli_D,
                     ]
                     new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
-                    return new_left, center_bits, new_right
+                    solutions.append([new_left, center_bits, new_right])
+                    # return new_left, center_bits, new_right
+    if solutions:
+        # if len(solutions):
+        #     print(solutions)
+        return solutions[0]
     return None

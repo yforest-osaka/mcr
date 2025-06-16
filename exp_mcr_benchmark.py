@@ -58,7 +58,7 @@ def main():
     cpu_count = -1  # Number of CPU cores to use for the optimization
     # nqubits = 3
 
-    with_swap_option = False  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
+    with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     if with_swap_option:
         folder_name = "results_with_swap"
     else:

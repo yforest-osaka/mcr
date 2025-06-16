@@ -1,6 +1,6 @@
 from mcr.gate_apply import PauliBit
 from mcr.mcr_optimize import find_mcr, find_nontrivial_swap
-from mcr.gate_apply import grouping, loop_optimization
+from mcr.gate_apply import grouping, loop_optimization, multiply_all
 from mcr.equiv_check import (
     pauli_bit_equivalence_check,
     equivalence_check_via_mqt_qcec,
@@ -14,8 +14,9 @@ import pickle
 from copy import deepcopy
 
 
-def mcr_swap(pauli_bit_groups):
+def mcr_swap(pauli_bit_groups, with_mcr_index=False):
     initial = deepcopy(pauli_bit_groups)
+    results = set()
     counter = 0
     remove_index_set = set()
     for i in range(len(pauli_bit_groups) - 1):
@@ -26,9 +27,10 @@ def mcr_swap(pauli_bit_groups):
             # print("-----------------")
             # print(left_data, right_data)
             if swappable_check:
-                # print(f"MCR Swappable found!: {i}")
-                # print(swappable_check)
-                # print("-----------------")
+                results.add(i)
+                print(f"MCR Swappable found!: {i}")
+                print(swappable_check)
+                print("-----------------")
                 pauli_bit_groups[i] = swappable_check[0]
                 pauli_bit_groups[i + 1] = swappable_check[1]
                 group_count = grouping(pauli_bit_groups[i + 1])
@@ -37,6 +39,8 @@ def mcr_swap(pauli_bit_groups):
                 counter += 1
     new_data = sum(pauli_bit_groups, [])
     # assert equiv([[], sum(initial, [])], [[], new_data]), "MCR swap failed!"
+    if with_mcr_index:
+        return new_data, results
     return new_data
 
 
@@ -57,7 +61,7 @@ def three_layer_nontrivial_swap(pauli_bit_groups):
                 # print("-----------------")
                 pauli_bit_groups[i] = swappable_check[0]
                 pauli_bit_groups[i + 2] = swappable_check[2]
-                remove_index_set.add(i + 1)
+                # remove_index_set.add(i + 1)
                 group_count = grouping(pauli_bit_groups[i + 2])
                 if len(group_count) >= 2:
                     remove_index_set.add(i + 2)
@@ -73,7 +77,7 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
     clifford_lst = []
     clifford, data_for_optimization = loop_optimization(pauli_bit_lst, show_log=False)
     clifford_lst.extend(clifford)
-    flag = 100
+    flag = 2
     mcr_flag = flag
     length = len(data_for_optimization)
     k = 1
@@ -120,6 +124,8 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
                 print(
                     f"🔍 No optimization found in {k}th iteration. Try {mcr_flag + 1} times left... {length} -> {len(data_for_optimization)}"
                 )
+                if initial == data_for_optimization:
+                    print("No change in data after optimization!")
         else:
             if show_opt_log:
                 print(
@@ -129,15 +135,12 @@ def test_algorithm(pauli_bit_lst, show_opt_log=True):
             k += 1
             if length == 0:
                 flag = 0
-
-    #
-
     return clifford_lst, data_for_optimization
 
 
 def main():
     filetype = "seq"  # "small" or "seq"
-    nqubits = 3
+    nqubits = 2
     # with open(f"unopt_{filetype}.pickle", "rb") as f:
     with open(f"unopt_{nqubits}.pickle", "rb") as f:
         seq = pickle.load(f)
@@ -154,6 +157,40 @@ def main():
 
     st = time()
     clifford_lst, optimized_data = test_algorithm(data, show_opt_log=True)
+
+    assert equiv([[], data], [clifford_lst, optimized_data]), "Test algorithm failed!"
+
+    # MCRが存在する場合は少しだけIdentityを挿入して再度アルゴリズムを実行させる
+    grouped_optimized_data = grouping(optimized_data)
+    aft_mcr, mcr_indices = mcr_swap(grouped_optimized_data, with_mcr_index=True)
+    # aft_mcr_2 = three_layer_nontrivial_swap(grouped_optimized_data)
+    if aft_mcr != optimized_data:
+        print("Try!")
+        for idx in mcr_indices:
+            pauli_a = grouped_optimized_data[idx - 1][0]
+            if len(grouped_optimized_data[idx]) == 2:
+                pauli_b, pauli_c = grouped_optimized_data[idx]
+                pauli_str_for_insert = multiply_all([pauli_a, pauli_b, pauli_c])[1]
+                grouped_optimized_data.insert(
+                    idx + 1,
+                    [
+                        PauliBit(pauli_str_for_insert, np.pi / 4),
+                        PauliBit(pauli_str_for_insert, -np.pi / 4),
+                    ],
+                )
+            else:
+                print(
+                    "要素数が2個でないため挿入をスキップしました: ",
+                    grouped_optimized_data[idx],
+                )
+        assert equiv([[], aft_mcr], [[], sum(grouped_optimized_data, [])]), (
+            "MCR addition failed!"
+        )
+        additional_clifford, optimized_data = test_algorithm(
+            three_layer_nontrivial_swap(grouped_optimized_data)
+        )
+        clifford_lst.extend(additional_clifford)
+
     ed = time()
     print(f"Optimization time: {ed - st} seconds")
 
@@ -173,7 +210,7 @@ def main():
         for elem in optimized_data:
             circuit_output.merge_circuit(elem.convert_into_qulacs())
 
-        equivalence_check_via_mqt_qcec(
+        assert equivalence_check_via_mqt_qcec(
             circuit_input, circuit_output, exclude_zx_checker=True
         )
 

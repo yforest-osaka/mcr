@@ -3,6 +3,9 @@
 .vscode/*
 .venv/*
 results/*
+Identity_opt_data/*
+original_data/*
+results_with_swap/*
 circuit_data/*
 .*qasm
 .*pickle

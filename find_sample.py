@@ -1,9 +1,5 @@
 from mcr.gate_apply import PauliBit
-from mcr.mcr_optimize import find_mcr, find_nontrivial_swap
-from mcr.gate_apply import grouping, loop_optimization
 from mcr.equiv_check import (
-    pauli_bit_equivalence_check,
-    equivalence_check_via_mqt_qcec,
     equiv,
 )
 from qulacs import QuantumCircuit
@@ -15,7 +11,8 @@ from mcr.rotation_circuit import PauliRotationSequence
 from mcr.unoptimize import unoptimize_circuit
 from tqdm import tqdm
 from copy import deepcopy
-from opt_using_mcr import test_algorithm
+from optimizer import full_optimization
+from typing import List, Tuple
 
 
 def main():
@@ -24,7 +21,7 @@ def main():
     nqubits = 2
     with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
-    unopt_iteration_count = 5
+    unopt_iteration_count = 3
     for _ in tqdm(
         range(num_samples), desc=f"Processing circuits with {nqubits} qubits"
     ):
@@ -55,31 +52,17 @@ def main():
                 assert sgn == "-", f"Unexpected sign: {sgn}"
                 data.append(PauliBit(pauli_str, -np.pi / 4))
         data.append(PauliBit("Z" * nqubits, -np.pi / 4))  # Add identity gate
-        st = time()
-        clifford_lst, optimized_data = test_algorithm(data, show_opt_log=False)
-        ed = time()
+
+        # st = time()
+        clifford_lst, optimized_data = full_optimization(
+            data, max_iter=10, show_opt_log=True
+        )
+
+        assert equiv([[], data], [clifford_lst, optimized_data]), "Optimization failed"
+
         if len(optimized_data) > 0:
             print("found!!!", len(optimized_data), "gates")
             break
-        # print(f"Optimization time: {ed - st} seconds")
-        # for elem in grouping(optimized_data):
-        #     print(f"Group size: {len(elem)}")
-        #     print(elem)
-        #     print("==========================")
-
-        # if nqubits <= 6:
-        #     circuit_input = QuantumCircuit(nqubits)
-        #     for elem in data:
-        #         circuit_input.merge_circuit(elem.convert_into_qulacs())
-
-        #     circuit_output = QuantumCircuit(nqubits)
-        #     circuit_output = set_clifford_to_qulacs(circuit_output, clifford_lst)
-        #     for elem in optimized_data:
-        #         circuit_output.merge_circuit(elem.convert_into_qulacs())
-
-        #     equivalence_check_via_mqt_qcec(
-        #         circuit_input, circuit_output, exclude_zx_checker=True
-        #     )
 
 
 if __name__ == "__main__":

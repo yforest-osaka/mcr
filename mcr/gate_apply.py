@@ -106,7 +106,8 @@ class PauliBit:
 
     def __repr__(self) -> str:
         # return f"PauliBit(x_n={self.x_n}, z_n={self.z_n}, sgn={self.sgn})"
-        return f"PauliBit({self.get_angle()}*{self.get_pauli_str()})"
+        # return f"PauliBit({self.get_angle()}*{self.get_pauli_str()})"
+        return f"{self.get_pauli_str()}, {np.round(self.get_angle(), 3)}"
 
     def get_pauli_str(self, with_sgn=False) -> str:
         """
