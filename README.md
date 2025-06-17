@@ -36,3 +36,5 @@ Now your environment is ready for running the benchmarks.
 ## Executing Compiler Benchmarks
 
 For detailed usage instructions, please refer to the `0_main.ipynb` notebook included in the repository.
+
+NOTE: I'm now trying to make an MCR-based compiler in `optimizer.py`.

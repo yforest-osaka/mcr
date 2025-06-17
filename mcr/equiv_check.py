@@ -9,7 +9,6 @@ from mqt.qcec.pyqcec import Configuration
 from qulacs import QuantumCircuit
 
 from mcr.filesave import qulacs_to_qasm
-from mcr.gate_apply import PauliBit, set_clifford_to_qulacs
 
 
 def get_qubit_count_from_qasm_file(filepath):
@@ -76,6 +75,8 @@ def equivalence_check_via_mqt_qcec(
 
 
 def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
+    from mcr.gate_apply import PauliBit
+
     if pauli_bit_lst_1:
         nqubits = len(pauli_bit_lst_1[0].get_pauli_str())
     elif pauli_bit_lst_2:
@@ -104,6 +105,8 @@ def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
 
 
 def equiv(seq_1: list, seq_2: list):
+    from mcr.gate_apply import set_clifford_to_qulacs
+
     clifford_lst_1, non_clifford_pauli_bits_1 = seq_1
     clifford_lst_2, non_clifford_pauli_bits_2 = seq_2
     if len(non_clifford_pauli_bits_1) > 0:

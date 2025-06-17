@@ -1,7 +1,6 @@
 from itertools import combinations
 import numpy as np
 from mcr.gate_apply import PauliBit, multiply_all
-from mcr.equiv_check import pauli_bit_equivalence_check
 
 
 # D=ABCとなるパターンを調べる→符号を確認してCliffordの追加が必要かどうかを判断する
@@ -12,12 +11,14 @@ def find_mcr(
 ) -> list[tuple[str, str, str, str]]:
     length_left = len(left_bits)
     length_right = len(right_bits)
-    for i in range(length_left):
+    for i in range(length_left - 1):
+        # print(i)
         for j in range(i + 1, length_left):
             pauli_A = left_bits[i]
             pauli_B = left_bits[j]
+            # print(pauli_A.get_pauli_str(), pauli_B.get_pauli_str())
 
-            for k in range(length_right):
+            for k in range(length_right - 1):
                 pauli_C = right_bits[k]
                 # (1) C は A, B とそれぞれ反可換
                 if any([pauli_A.commutes(pauli_C), pauli_B.commutes(pauli_C)]):
@@ -48,6 +49,9 @@ def find_mcr(
                         if target_sign == sgn:  # D = ABC
                             #! ここをupdate(Aを分割する)
                             # print("update_MCR")
+                            # print(
+                            #     f"left_bits: {left_bits[i], left_bits[j]}, right_bits: {right_bits[k], right_bits[l]}"
+                            # )
                             new_left = left_bits.copy()
                             new_right = right_bits.copy()
                             new_left.pop(j)
@@ -71,6 +75,10 @@ def find_mcr(
                             assert target_sign + sgn == 1, (
                                 "Sign mismatch"
                             )  # D = -ABC (only swap)
+                            # print("only swap")
+                            # print(
+                            #     f"left_bits: {left_bits[i], left_bits[j]}, right_bits: {right_bits[k], right_bits[l]}"
+                            # )
                             new_left = left_bits.copy()
                             new_right = right_bits.copy()
                             new_left.pop(j)

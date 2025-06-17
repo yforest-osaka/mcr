@@ -592,7 +592,6 @@ def loop_optimization(pauli_bit_list, show_log=True):
                 print(f"optimization result: {initial_length} -> {len(updated_rots)}")
                 print("=" * 40)
             flag = False
-
     return clifford_data, updated_rots
 
 

@@ -17,7 +17,7 @@ from typing import List, Tuple
 
 def main():
     filetype = "seq"  # "small" or "seq"
-    num_samples = 100
+    num_samples = 1000
     nqubits = 2
     with_swap_option = True  # If True, the MCR swap is executed (then the unoptimized circuit becomes longer)
     # Number of iterations for the unoptimized circuit
@@ -55,7 +55,7 @@ def main():
 
         # st = time()
         clifford_lst, optimized_data = full_optimization(
-            data, max_iter=10, show_opt_log=True
+            data, max_iter=10, show_opt_log=False
         )
 
         assert equiv([[], data], [clifford_lst, optimized_data]), "Optimization failed"

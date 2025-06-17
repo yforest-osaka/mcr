@@ -1,3 +1,4 @@
+# 廃止予定
 from mcr.gate_apply import PauliBit, grouping, loop_optimization, multiply_all
 from mcr.mcr_optimize import find_mcr, find_nontrivial_swap
 from mcr.equiv_check import (

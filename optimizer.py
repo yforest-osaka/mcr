@@ -14,7 +14,17 @@ import pickle
 from copy import deepcopy
 
 
-def mcr_swap(pauli_bit_groups, with_mcr_index=False):
+def have_common_pauli_str(left_bits, right_bits):
+    left_strs = {bit.get_pauli_str() for bit in left_bits}
+    right_strs = {bit.get_pauli_str() for bit in right_bits}
+    return not left_strs.isdisjoint(right_strs)
+
+
+def contains_list(lst):
+    return any(isinstance(item, list) for item in lst)
+
+
+def mcr_swap(pauli_bit_groups, with_mcr_index=False, show_log=False):
     data = deepcopy(pauli_bit_groups)
     results = set()
     remove_index_set = set()
@@ -24,22 +34,24 @@ def mcr_swap(pauli_bit_groups, with_mcr_index=False):
             right_data = data[i + 1]
             swappable_check = find_mcr(left_data, right_data)
             if swappable_check:
-                # print(f"Swapping {left_data} and {right_data} at index {i}")
-                # assert equiv(
-                #     [[], left_data + right_data],
-                #     [[], swappable_check[0] + swappable_check[1]],
-                # ), (
-                #     f"Swapping failed: {left_data} + {right_data} != {swappable_check[0]} + {swappable_check[1]}"
-                # )
+                if show_log:
+                    print(f"Swapping {left_data} and {right_data} at index {i}")
+                    # Uncomment for debugging
                 results.add(i)
                 data[i] = swappable_check[0]
                 data[i + 1] = swappable_check[1]
-                if len(grouping(data[i + 1])) >= 2:
+                # if len(grouping(data[i + 1])) >= 1:  # any case?
+                #     remove_index_set.add(i + 1)
+                if (
+                    len(data[i + 1]) >= 3 and len(grouping(data[i + 1])) >= 2
+                ):  # 入れ替え後の右側の要素数が3個以上かつTレイヤー化した時のレイヤー数が2以上の時は次ループのswap対象から除外
                     remove_index_set.add(i + 1)
+                elif i < len(data) - 2 and have_common_pauli_str(
+                    data[i + 1], data[i + 2]
+                ):
+                    # print("have common pauli_str, removing next-next index")
+                    remove_index_set.add(i + 2)
     new_data = sum(data, [])
-    # assert equiv([[], sum(data, [])], [[], new_data]), (
-    #     f"MCR swapで失敗しています！: {data} → {new_data}"
-    # )
     if with_mcr_index:
         return new_data, results
     return new_data
@@ -50,20 +62,40 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False):
     # print(f"🔁 Initial optimization: {current_length} gates")
     # clifford, data = loop_optimization(pauli_bit_lst, show_log=False)
     # clifford_lst.extend(clifford)
+    # PauliBitのリストが2重の場合は、groupingを行わない。
+    if contains_list(pauli_bit_lst):
+        skip_grouping = True
+        data = deepcopy(sum(pauli_bit_lst, []))
+    else:
+        skip_grouping = False
+        data = deepcopy(pauli_bit_lst)
+    tmp1 = deepcopy(data)
 
     attempts_left = max_attempts
-    data = deepcopy(pauli_bit_lst)
     current_length = len(data)
     iteration = 1
     while attempts_left > 0 and current_length > 0:
         original_data = deepcopy(data)
-
-        new_data = mcr_swap(grouping(data))
-        clifford_2, data = loop_optimization(new_data, show_log=False)
+        if (
+            skip_grouping and iteration == 1
+        ):  # あえてIdentityを挿入しているケースの場合は初回だけgroupingを行わない
+            mcr_swapped_data = mcr_swap(pauli_bit_lst)
+        else:
+            mcr_swapped_data = mcr_swap(grouping(data))
+        clifford_2, data = loop_optimization(mcr_swapped_data, show_log=False)
+        # assert equiv([[], mcr_swapped_data], [clifford_2, data]), (
+        #     f"equiv_loop_optimization: {mcr_swapped_data} != {clifford_2} + {data}"
+        # )
+        # print("生成されたCliffordゲート数:", len(clifford_2))
         clifford_lst.extend(clifford_2)
+        # print("Clifford_lstにあるCliffordゲート数:", len(clifford_lst))
 
         if len(data) >= current_length:
             attempts_left -= 1
+            # 一応equiv check
+            # assert equiv([[], tmp1], [clifford_lst, data]), (
+            #     f"equiv failed in 最適化できなかったとき {iteration}:\n{tmp1} != \n{clifford_lst} \n + {data}"
+            # )
             if show_opt_log:
                 print(
                     f"🔍 No optimization in iteration {iteration}: {current_length} → {len(data)}"
@@ -75,16 +107,22 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False):
                 print(
                     f"🎉 Optimization success in iteration {iteration}: {current_length} → {len(data)}"
                 )
+            # # 一応equiv check
+            # assert equiv([[], tmp1], [clifford_lst, data]), (
+            #     f"equiv failed in 最適化できたとき {iteration}: {tmp1} != {clifford_lst} + {data}"
+            # )
             current_length = len(data)
             iteration += 1
+    # assert equiv([[], tmp1], [clifford_lst, data]), (
+    #     f"optimize_data_loop failed!"
+    # )  # ここでエラー
     return clifford_lst, data
 
 
-def attempt_mcr_retry(clifford_lst, optimized_data):
-    initial_clifford_data = deepcopy(clifford_lst)
-    # initial_data = deepcopy(optimized_data)
+def attempt_mcr_retry(non_clifford_pauli_lst):
+    # MCRを満たすゲートをあえて挿入する。
 
-    grouped_data = grouping(optimized_data)
+    grouped_data = grouping(non_clifford_pauli_lst)
 
     # print("⚠️ Trying to improve further with MCR identity insertion...")
 
@@ -95,63 +133,61 @@ def attempt_mcr_retry(clifford_lst, optimized_data):
         # pauli_d = grouped_data[idx + 2][0]
         pauli_b, pauli_c = grouped_data[idx + 1]
         new_pauli_str = multiply_all([pauli_a, pauli_b, pauli_c])[1]
-        # print(f"Inserting new PauliBit with string {new_pauli_str} at index {idx}")
         grouped_data[idx] += [
             PauliBit(new_pauli_str, np.pi / 4),
             PauliBit(new_pauli_str, -np.pi / 4),
         ]
-    target_data = mcr_swap(grouped_data)
-    # assert equiv([[], sum(t, [])], [[], target_data]), "MCR swap failed!"
-    additional_clifford, new_optimized_data = optimize_data_loop(
-        target_data, show_opt_log=True, max_attempts=1
-    )
-
-    # return clifford_lst, optimized_data
-    updated_clifford_lst = initial_clifford_data + additional_clifford
-    return updated_clifford_lst, new_optimized_data
+    return grouped_data
 
 
-def full_optimization(data, max_iter=10, show_opt_log=False):
-    clifford_lst, optimized_data = optimize_data_loop(data, show_opt_log=show_opt_log)
-    # assert equiv([[], data], [clifford_lst, optimized_data]), (
-    #     "First optimization failed"
-    # )
-    if len(optimized_data) == 0:
-        return clifford_lst, optimized_data
-
+def full_optimization(data, max_iter=10, show_opt_log=False, skip_additional_opt=False):
+    final_clifford_lst = []
+    initial = deepcopy(data)
     for k in range(max_iter):
         if show_opt_log:
-            print(f"🔁 Additional optimization: {k + 1} / {max_iter}")
-        # initial_optimized_data = deepcopy(optimized_data)
-        # initial_clifford_lst = deepcopy(clifford_lst)
-        new_clifford_lst, new_optimized_data = attempt_mcr_retry(
-            clifford_lst, optimized_data
+            print(f"🔁 Optimization iteration: {k + 1} / {max_iter}")
+        clifford_lst, optimized_data = optimize_data_loop(
+            data, show_opt_log=show_opt_log
         )
-        # assert equiv(
-        #     [initial_clifford_lst, initial_optimized_data],
-        #     [new_clifford_lst, new_optimized_data],
-        # ), "Optimization failed to maintain equivalence"
+        final_clifford_lst.extend(clifford_lst)
+
+        if len(optimized_data) == 0:
+            return final_clifford_lst, optimized_data
+
+        if skip_additional_opt:
+            final_clifford_lst.extend(clifford_lst)
+            data = deepcopy(optimized_data)  # update data for next iteration
+            new_optimized_data = data
+            continue
+
+        if show_opt_log:
+            print(f"⚙️  Additional optimization: {k + 1} / {max_iter}")
+        old_optimized_data = deepcopy(optimized_data)
+        redundant_data = attempt_mcr_retry(optimized_data)
+
+        new_clifford_lst, new_optimized_data = optimize_data_loop(
+            redundant_data, show_opt_log=show_opt_log, max_attempts=1
+        )
+
         if len(new_optimized_data) == 0:
-            print("OK!")
-            clifford_lst = new_clifford_lst
-            optimized_data = new_optimized_data
-            return clifford_lst, optimized_data
+            final_clifford_lst.extend(new_clifford_lst)
+            return final_clifford_lst, new_optimized_data
         else:
-            if len(new_optimized_data) <= len(optimized_data):
-                clifford_lst = deepcopy(new_clifford_lst)
-                optimized_data = deepcopy(new_optimized_data)
+            if len(new_optimized_data) <= len(old_optimized_data):
+                final_clifford_lst.extend(new_clifford_lst)
+                data = deepcopy(new_optimized_data)  # update data for next iteration
             else:
                 print(
                     f"❗️ Additional optimization did not improve the result, stopping: {k + 1} / {max_iter}"
                 )
-                return clifford_lst, optimized_data
-    return clifford_lst, optimized_data
+                return final_clifford_lst, old_optimized_data
+    return final_clifford_lst, new_optimized_data
 
 
 def main():
     filetype = "seq"
-    nqubits = 2
-    max_iter = 10
+    nqubits = 20
+    max_iter = 3
 
     with open(f"unopt_{nqubits}.pickle", "rb") as f:
         seq = pickle.load(f)
@@ -167,10 +203,11 @@ def main():
 
     st = time()
     clifford_lst, optimized_data = full_optimization(
-        data, max_iter=max_iter, show_opt_log=True
+        data, max_iter=max_iter, show_opt_log=True, skip_additional_opt=False
     )
     ed = time()
     print(f"✅ Optimization completed in {ed - st:.5f} seconds")
+    print(f"Final non-Clifford gates: {len(optimized_data)}")
 
     if nqubits <= 3:
         circuit_input = QuantumCircuit(nqubits)
