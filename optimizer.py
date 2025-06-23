@@ -57,6 +57,31 @@ def mcr_swap(pauli_bit_groups, with_mcr_index=False, show_log=False):
     return new_data
 
 
+def three_layer_nontrivial_swap(pauli_bit_groups, with_mcr_index=False):
+    remove_index_set = set()
+    results = set()
+    for i in range(len(pauli_bit_groups) - 2):
+        if i not in remove_index_set:
+            left_data = pauli_bit_groups[i]
+            center_data = pauli_bit_groups[i + 1]
+            right_data = pauli_bit_groups[i + 2]
+            swappable_check = find_nontrivial_swap(left_data, center_data, right_data)
+            if swappable_check:
+                # print("at index ", i)
+                results.add(i)
+                # print("お試し")
+                # if len(grouping(pauli_bit_groups[i + 1])) >= 2:
+                # remove_index_set.add(i + 1)  # お試し
+                pauli_bit_groups[i] = swappable_check[0]
+                pauli_bit_groups[i + 2] = swappable_check[2]
+                if len(grouping(pauli_bit_groups[i + 2])) >= 2:
+                    remove_index_set.add(i + 2)
+    # print("After 3-layer swap:", sum(pauli_bit_groups, []))
+    if with_mcr_index:
+        return sum(pauli_bit_groups, []), results
+    return sum(pauli_bit_groups, [])
+
+
 def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False):
     clifford_lst = []
     # print(f"🔁 Initial optimization: {current_length} gates")
@@ -74,6 +99,15 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False):
     attempts_left = max_attempts
     current_length = len(data)
     iteration = 1
+    if not skip_grouping:
+        data = three_layer_nontrivial_swap(grouping(data))
+        clifford_1, data = loop_optimization(data, show_log=False)
+        clifford_lst.extend(clifford_1)
+    if len(data) == 0:
+        if show_opt_log:
+            print(f"🎉 Optimization success: {current_length} → {len(data)}")
+        return clifford_lst, data
+
     while attempts_left > 0 and current_length > 0:
         original_data = deepcopy(data)
         if (
@@ -126,13 +160,19 @@ def attempt_mcr_retry(non_clifford_pauli_lst):
 
     # print("⚠️ Trying to improve further with MCR identity insertion...")
 
-    for idx, group in enumerate(grouped_data[:-1]):
-        if len(group) != 1 or len(grouped_data[idx + 1]) != 2:
+    for idx, group in enumerate(grouped_data[:-2]):
+        # if len(group) != 1 or len(grouped_data[idx + 1]) != 2:
+        if len(grouped_data[idx + 1]) != 2:
             continue
         pauli_a = group[0]
-        # pauli_d = grouped_data[idx + 2][0]
+        pauli_d_str = grouped_data[idx + 2][0].get_pauli_str()
         pauli_b, pauli_c = grouped_data[idx + 1]
         new_pauli_str = multiply_all([pauli_a, pauli_b, pauli_c])[1]
+        # cand_strs = [pauli_bit.get_pauli_str() for pauli_bit in grouped_data[idx + 2]]
+        # if pauli_a.get_pauli_str() not in cand_strs and new_pauli_str not in cand_strs:
+        # print("スキップ: ", grouped_data[idx + 1])
+        # continue
+        # print(f"add {new_pauli_str} at index {idx}")
         grouped_data[idx] += [
             PauliBit(new_pauli_str, np.pi / 4),
             PauliBit(new_pauli_str, -np.pi / 4),

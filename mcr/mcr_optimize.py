@@ -11,6 +11,7 @@ def find_mcr(
 ) -> list[tuple[str, str, str, str]]:
     length_left = len(left_bits)
     length_right = len(right_bits)
+    solutions = []
     for i in range(length_left - 1):
         # print(i)
         for j in range(i + 1, length_left):
@@ -111,6 +112,9 @@ def find_nontrivial_swap(
         ]  # {A, B}, {A, C}をチェック
         if any(parity_lst):  # 1つでもcommuteするものがいる場合はskip
             continue
+        # print(
+        #     f"Checking left_bits: {pauli_A.get_pauli_str()} with center_bits: {pauli_B.get_pauli_str()}, {pauli_C.get_pauli_str()}"
+        # )
         # calc D = ABC and check D in right_bits
         coef_abc, pat_abc = multiply_all([pauli_A, pauli_B, pauli_C])
 
@@ -132,33 +136,33 @@ def find_nontrivial_swap(
             if abs(angle_d) != abs(angle_a):
                 continue
             if target_str == pat_abc:  # 発見！
-                angle = pauli_D.get_angle()
                 sign_d = pauli_D.sgn
                 if sgn == sign_d:  # 符号も一致する場合 (D = ABC, only swap)
                     # そのまま場所を入れ替えても等価
+                    # print("find_nontrivial_swap called")
                     # print("3layer swap only")
                     # print(
                     #     f"left_bits: {left_bits[l_idx]}, right_bits: {right_bits[r_idx]}"
                     # )
                     left_bits.pop(l_idx)
                     right_bits.pop(r_idx)
-                    # return (
-                    #     left_bits + [pauli_D],
-                    #     center_bits,
-                    #     [pauli_A] + right_bits,
-                    # )
-                    solutions.append(
-                        [left_bits + [pauli_D], center_bits, [pauli_A] + right_bits]
+                    return (
+                        left_bits + [pauli_D],
+                        center_bits,
+                        [pauli_A] + right_bits,
                     )
+                    # solutions.append(
+                    #     [left_bits + [pauli_D], center_bits, [pauli_A] + right_bits]
+                    # )
                 else:
                     assert sgn + sign_d == 1, "Sign mismatch"  # 符号は逆 (D = -ABC)
+                    # print("find_nontrivial_swap called")
+                    # print("update_3layer swap")
                     # print(
                     #     f"left_bits: {left_bits[l_idx]}, right_bits: {right_bits[r_idx]}"
                     # )
                     left_bits.pop(l_idx)
                     right_bits.pop(r_idx)
-                    #! ここをupdate(Aを分割する)
-                    # print("update_3layer swap")
                     angle_a = pauli_A.get_angle()
                     pat_A = pauli_A.get_pauli_str()
                     new_left = left_bits + [
@@ -166,10 +170,6 @@ def find_nontrivial_swap(
                         pauli_D,
                     ]
                     new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
-                    solutions.append([new_left, center_bits, new_right])
-                    # return new_left, center_bits, new_right
-    if solutions:
-        # if len(solutions):
-        #     print(solutions)
-        return solutions[0]
+                    # solutions.append([new_left, center_bits, new_right])
+                    return new_left, center_bits, new_right
     return None

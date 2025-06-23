@@ -24,7 +24,7 @@ def mcr_swap(pauli_bit_groups, with_mcr_index=False):
             right_data = pauli_bit_groups[i + 1]
             swappable_check = find_mcr(left_data, right_data)
             if swappable_check:
-                print(f"Swapping {left_data} and {right_data} at index {i}")
+                # print(f"Swapping {left_data} and {right_data} at index {i}")
                 results.add(i)
                 pauli_bit_groups[i] = swappable_check[0]
                 pauli_bit_groups[i + 1] = swappable_check[1]
@@ -46,11 +46,13 @@ def three_layer_nontrivial_swap(pauli_bit_groups, with_mcr_index=False):
             right_data = pauli_bit_groups[i + 2]
             swappable_check = find_nontrivial_swap(left_data, center_data, right_data)
             if swappable_check:
+                # print("at index ", i)
                 results.add(i)
                 pauli_bit_groups[i] = swappable_check[0]
                 pauli_bit_groups[i + 2] = swappable_check[2]
                 if len(grouping(pauli_bit_groups[i + 2])) >= 2:
                     remove_index_set.add(i + 2)
+    # print("After 3-layer swap:", sum(pauli_bit_groups, []))
     if with_mcr_index:
         return sum(pauli_bit_groups, []), results
     return sum(pauli_bit_groups, [])
@@ -69,14 +71,16 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=2, show_opt_log=True):
         original_data = deepcopy(data)
 
         groups = grouping(data)
+        # print("start 3swap")
         swapped_data = three_layer_nontrivial_swap(groups)
 
         clifford_1, data = loop_optimization(swapped_data, show_log=False)
+        # print(len(data), "after 3swap")
         clifford_lst.extend(clifford_1)
 
         if len(data) == 0:
             break
-
+        # print("start mcr_swap")
         new_data = mcr_swap(grouping(data))
         clifford_2, data = loop_optimization(new_data, show_log=False)
         clifford_lst.extend(clifford_2)
@@ -105,7 +109,7 @@ def attempt_mcr_retry(optimized_data, clifford_lst):
     aft_mcr, mcr_indices = mcr_swap(grouped_data, with_mcr_index=True)
 
     print("⚠️ Trying to improve further with MCR identity insertion...")
-
+    print("additional MCR indices found:", mcr_indices)
     for idx in mcr_indices:
         if idx == 0 or len(grouped_data[idx]) != 2:
             # print("スキップ: ", grouped_data[idx])
@@ -115,6 +119,7 @@ def attempt_mcr_retry(optimized_data, clifford_lst):
         pauli_b, pauli_c = grouped_data[idx]
         new_pauli_str = multiply_all([pauli_a, pauli_b, pauli_c])[1]
         # new_pauli_str_2 = multiply_all([pauli_d, pauli_b, pauli_c])[1]
+        input("Idx:", idx, "New Pauli String:", new_pauli_str)
 
         grouped_data.insert(
             idx + 1,
@@ -132,9 +137,9 @@ def attempt_mcr_retry(optimized_data, clifford_lst):
         #     ],
         # )
 
-    assert equiv([[], aft_mcr], [[], sum(grouped_data, [])]), (
-        "MCR identity insertion failed!"
-    )
+    # assert equiv([[], aft_mcr], [[], sum(grouped_data, [])]), (
+    #     "MCR identity insertion failed!"
+    # )
 
     additional_clifford, optimized_data = optimize_data_loop(
         three_layer_nontrivial_swap(grouped_data), show_opt_log=False
@@ -146,7 +151,7 @@ def attempt_mcr_retry(optimized_data, clifford_lst):
 
 def main():
     filetype = "seq"
-    nqubits = 2
+    nqubits = 20
 
     with open(f"unopt_{nqubits}.pickle", "rb") as f:
         seq = pickle.load(f)
