@@ -14,8 +14,8 @@ quantum-circuit-optimization/*
 input_data/*
 external_data/*
 notebooks/*
-# mcr_opt_dev.ipynb
-# opt_using_mcr.py
+mcr_opt_dev.ipynb
+opt_using_mcr.py
 pbse/*
 pbso/*
 tmp/*

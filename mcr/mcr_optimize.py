@@ -92,7 +92,10 @@ def find_mcr(
 
 
 def find_nontrivial_swap(
-    left_bits: list[PauliBit], center_bits: list[PauliBit], right_bits: list[PauliBit]
+    left_bits: list[PauliBit],
+    center_bits: list[PauliBit],
+    right_bits: list[PauliBit],
+    opt_for_basis_changle=False,
 ):
     # ) -> tuple(list[PauliBit], list[PauliBit], list[PauliBit]):
     # check  A | B, C | D = D | B, C | A
@@ -144,6 +147,15 @@ def find_nontrivial_swap(
                     # print(
                     #     f"left_bits: {left_bits[l_idx]}, right_bits: {right_bits[r_idx]}"
                     # )
+                    if opt_for_basis_changle:
+                        if (
+                            len(left_bits) == 1
+                            and len(center_bits) == 2
+                            and len(right_bits) == 1
+                        ):
+                            # 片方が1つしかない場合は、swapしても意味がないのでスキップ
+                            return True
+                        return False
                     left_bits.pop(l_idx)
                     right_bits.pop(r_idx)
                     return (
