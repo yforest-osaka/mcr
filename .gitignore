@@ -1,22 +1,7 @@
 .DS_Store
 **/__pycache__/**
+quantum-circuit-optimization/** */
 .vscode/*
 .venv/*
-results/*
-Identity_opt_data/*
-original_data/*
-results_with_swap/*
-circuit_data/*
 .*qasm
 .*pickle
-paper_mcr/*
-quantum-circuit-optimization/*
-input_data/*
-external_data/*
-notebooks/*
-mcr_opt_dev.ipynb
-opt_using_mcr.py
-pbse/*
-pbso/*
-tmp/*
-info.md
