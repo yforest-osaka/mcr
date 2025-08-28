@@ -4,3 +4,4 @@
 .venv/*
 .*qasm
 .*pickle
+tmp/*
