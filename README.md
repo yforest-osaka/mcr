@@ -22,16 +22,22 @@ Quantum circuit unoptimization operates on Python 3.11, and the required depende
 3. Use `uv` to install the dependencies and create a virtual environment:
 
     ```bash
-    uv venv
+    uv sync
     ```
 
-4. Activate the virtual environment:
+4. Build the Rust optimization engine (for FastTODD):
 
-    ```bash
-    source .venv/bin/activate
+Before activating the Python environment, compile the Rust-based
+optimizer (quantum-circuit-optimization):
+
+    ``` bash
+    cd quantum-circuit-optimization
+    cargo build -r
+    cd ..
     ```
 
-Now your environment is ready for running the benchmarks.
+
+Now your environment is ready for running all compiler benchmarks.
 
 ## Executing Compiler Benchmarks
 
