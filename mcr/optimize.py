@@ -1,4 +1,3 @@
-# 新しく作成
 import os
 import subprocess
 import time
@@ -160,7 +159,7 @@ def fasttodd_optimization(unopted_circuit_filepath, timeout=200000, poll_interva
         stderr=subprocess.PIPE,
     )
 
-    # ファイル生成を最大 `timeout` 秒までポーリングで待機
+    # Poll and wait for file generation up to `timeout` seconds
     start_time = time.time()
     while not os.path.exists(output_filepath):
         if time.time() - start_time > timeout:
@@ -171,7 +170,7 @@ def fasttodd_optimization(unopted_circuit_filepath, timeout=200000, poll_interva
             )
         time.sleep(poll_interval)
 
-    # 子プロセスが終了するのを待つ（確実に完了させるため）
+    # Wait for the subprocess to complete
     process.wait()
     os.chdir("..")  # Change back to the original directory
 

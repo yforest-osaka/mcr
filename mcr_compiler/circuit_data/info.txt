@@ -1,0 +1,1 @@
+- All circuits have an optimal T-count 1 (Equivalent to the circuit "optimal/z_{nqubits}.qasm").

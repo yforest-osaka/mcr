@@ -50,9 +50,9 @@ class PauliRotationSequence:
         if isinstance(gate, str):
             gate = stim.PauliString(gate)
 
-        assert isinstance(
-            gate, stim.PauliString
-        ), "The gate must be an instance of a stim.PauliString."
+        assert isinstance(gate, stim.PauliString), (
+            "The gate must be an instance of a stim.PauliString."
+        )
         pauli_string_length = len(gate)
         diff = self.__n_qubit - pauli_string_length
         if diff > 0:
@@ -361,6 +361,16 @@ class PauliRotationSequence:
         with open(filename, mode="w") as f:
             f.write("\n".join(string))
 
+    def save_circuit_using_txt(self, filename: str) -> None:
+        """Saves the quantum circuit in text format.
+
+        Args:
+            filename (str): The filename to save to.
+        """
+        elems = [str(elem[1]) for elem in self.get_all()]
+        with open(filename, mode="w") as f:
+            f.write("\n".join(elems))
+
 
 def complement_identity(circuit: QuantumCircuit) -> QuantumCircuit:
     """Adds Identity gates to qubits that have no gates applied.
@@ -523,3 +533,20 @@ def get_pauli_id_from_stim(pauli):
         else:
             raise ValueError(f"Unknown Pauli: {pauli}")
     return values
+
+
+def load_circuit_from_txt(filename: str) -> None:
+    """Loads the quantum circuit from text format.
+
+    Args:
+        filename (str): The filename to load from.
+    """
+    with open(filename, mode="r") as f:
+        lines = f.readlines()
+    n = len(lines[0].strip()) - 1
+    circuit = PauliRotationSequence(n_qubit=n)
+    for idx, line in enumerate(lines):
+        pauli_str = line.strip()
+        stim_pauli = stim.PauliString(pauli_str)
+        circuit.add_gate((idx,), stim_pauli)
+    return circuit

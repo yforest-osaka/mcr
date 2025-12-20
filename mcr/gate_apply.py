@@ -440,18 +440,24 @@ def multiply_all(pauli_bit_lst: List["PauliBit"]) -> Tuple[float, str]:
     return coef, pauli_str
 
 
-def grouping(pauli_bit_data_lst):
+def grouping(pauli_bit_data_lst, reverse_input=False):
     L = []  # Empty list L
-    for Rp in pauli_bit_data_lst:
-        # print('Rp', Rp)
+
+    # 入力リストの探索順を切り替える
+    if reverse_input:
+        iterable = reversed(pauli_bit_data_lst)
+    else:
+        iterable = pauli_bit_data_lst
+
+    for Rp in iterable:
         j = 0  # Initialize (create a new layer if no anti-commuting group is found)
+
         for k in reversed(range(len(L))):
             commute_info = [Rp.commutes(Rk) for Rk in L[k]]
             if not all(commute_info):  # If there is even one anti-commuting element
                 j = k + 1
                 break
-            else:
-                pass
+
         if j == 0:
             if len(L) == 0:
                 L.append([Rp])
@@ -464,10 +470,9 @@ def grouping(pauli_bit_data_lst):
             else:
                 # Add to an existing group
                 L[j].append(Rp)
-    # for group in L:
-    #     commute_check = [ele1.commutes(ele2) for ele1, ele2 in combinations(group, 2)]
-    #     if not all(commute_check):
-    #         raise ValueError(f"Grouping failed: some elements do not commute.: {group}")
+    if reverse_input:
+        # return list(reversed([list(reversed(layer)) for layer in L]))
+        return list(reversed(L))
     return L
 
 
@@ -503,8 +508,17 @@ def separate_clifford_and_rotation(pauli_bit_data_lst):
         else:
             # angleがpi/2を超えるもの、もしくは-np.pi/2を下回るものは分割してCliffordとnon-Cliffordに分けてappendしたい
             angle = elem.get_angle()
-            if angle > np.pi / 2:
-                assert angle < np.pi
+            if angle > np.pi or angle < -np.pi:
+                if angle > 0:
+                    residue_angle = angle - np.pi
+                else:
+                    residue_angle = angle + np.pi
+                clifford_gates += PauliBit(
+                    elem.get_pauli_str(), np.pi
+                ).get_clifford_gate_sequence()
+                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+            elif angle > np.pi / 2:
+                assert angle < np.pi, f"Angle {angle} exceeds expected range"
                 residue_angle = angle - np.pi / 2
                 clifford_gates += PauliBit(
                     elem.get_pauli_str(), np.pi / 2
@@ -512,7 +526,7 @@ def separate_clifford_and_rotation(pauli_bit_data_lst):
                 rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
                 # 分割してCliffordとnon-Cliffordに分ける
             elif angle < -np.pi / 2:
-                assert angle > -np.pi
+                assert angle > -np.pi, f"Angle {angle} exceeds expected range"
                 residue_angle = angle + np.pi / 2
                 clifford_gates += PauliBit(
                     elem.get_pauli_str(), -np.pi / 2
