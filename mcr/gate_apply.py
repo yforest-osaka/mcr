@@ -1,5 +1,4 @@
 from typing import List, Tuple
-from itertools import combinations
 import numpy as np
 from qulacs import QuantumCircuit
 from qiskit import QuantumCircuit as QiskitCircuit
@@ -18,7 +17,6 @@ from qiskit.circuit.library import (
 )
 from pytket import Circuit
 
-# from pytket.passes import CliffordSimp
 from pytket.passes import RemoveRedundancies
 from pytket.transform import Transform
 from qulacs.converter import convert_qulacs_circuit_to_QASM
@@ -438,175 +436,6 @@ def multiply_all(pauli_bit_lst: List["PauliBit"]) -> Tuple[float, str]:
         elif x == 1 and z == 1:
             pauli_str += "Y"
     return coef, pauli_str
-
-
-def grouping(pauli_bit_data_lst, reverse_input=False):
-    L = []  # Empty list L
-
-    # 入力リストの探索順を切り替える
-    if reverse_input:
-        iterable = reversed(pauli_bit_data_lst)
-    else:
-        iterable = pauli_bit_data_lst
-
-    for Rp in iterable:
-        j = 0  # Initialize (create a new layer if no anti-commuting group is found)
-
-        for k in reversed(range(len(L))):
-            commute_info = [Rp.commutes(Rk) for Rk in L[k]]
-            if not all(commute_info):  # If there is even one anti-commuting element
-                j = k + 1
-                break
-
-        if j == 0:
-            if len(L) == 0:
-                L.append([Rp])
-            else:
-                L[0].append(Rp)
-        else:
-            if len(L) == j:
-                # Create a new layer
-                L.append([Rp])
-            else:
-                # Add to an existing group
-                L[j].append(Rp)
-    if reverse_input:
-        # return list(reversed([list(reversed(layer)) for layer in L]))
-        return list(reversed(L))
-    return L
-
-
-def synthesize_sequence(pauli_bit_data_lst):
-    length = len(pauli_bit_data_lst)
-    if length == 1:
-        return pauli_bit_data_lst
-    pauli_bit_data_lst = sorted(pauli_bit_data_lst, key=lambda x: x.get_pauli_str())
-    results = []
-    target_str = pauli_bit_data_lst[0].get_pauli_str()
-    angle = pauli_bit_data_lst[0].get_angle()
-    for idx, elem in enumerate(pauli_bit_data_lst[1:]):
-        if target_str == elem.get_pauli_str():
-            angle += elem.get_angle()
-            if idx == length - 2 and angle != 0:  # last element must be added
-                results.append(PauliBit(target_str, angle))
-        else:
-            if angle != 0:
-                results.append(PauliBit(target_str, angle))
-            target_str = elem.get_pauli_str()
-            angle = elem.get_angle()
-            if idx == length - 2:  # last element must be added
-                results.append(PauliBit(target_str, angle))
-    return results
-
-
-def separate_clifford_and_rotation(pauli_bit_data_lst):
-    clifford_gates = []
-    rotation_gates = []
-    for elem in pauli_bit_data_lst:
-        if elem.is_clifford():
-            clifford_gates += elem.get_clifford_gate_sequence()
-        else:
-            # angleがpi/2を超えるもの、もしくは-np.pi/2を下回るものは分割してCliffordとnon-Cliffordに分けてappendしたい
-            angle = elem.get_angle()
-            if angle > np.pi or angle < -np.pi:
-                if angle > 0:
-                    residue_angle = angle - np.pi
-                else:
-                    residue_angle = angle + np.pi
-                clifford_gates += PauliBit(
-                    elem.get_pauli_str(), np.pi
-                ).get_clifford_gate_sequence()
-                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
-            elif angle > np.pi / 2:
-                assert angle < np.pi, f"Angle {angle} exceeds expected range"
-                residue_angle = angle - np.pi / 2
-                clifford_gates += PauliBit(
-                    elem.get_pauli_str(), np.pi / 2
-                ).get_clifford_gate_sequence()
-                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
-                # 分割してCliffordとnon-Cliffordに分ける
-            elif angle < -np.pi / 2:
-                assert angle > -np.pi, f"Angle {angle} exceeds expected range"
-                residue_angle = angle + np.pi / 2
-                clifford_gates += PauliBit(
-                    elem.get_pauli_str(), -np.pi / 2
-                ).get_clifford_gate_sequence()
-                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
-            else:
-                rotation_gates.append(elem)
-    return clifford_gates, rotation_gates
-
-
-def get_rotation_relation(pauli_bit_1: PauliBit, pauli_bit_2: PauliBit):
-    if pauli_bit_1.get_pauli_str() == pauli_bit_2.get_pauli_str():
-        # 回転軸が等しい場合
-        sum_angle = pauli_bit_1.get_angles() + pauli_bit_2.get_angles()
-        modulus = int((sum_angle / (np.pi / 4)) % 8)
-        if np.allclose(
-            modulus, int(modulus)
-        ):  # Check if modulus is an integer (if true, exactly decomposed into Clifford+T)
-            return int(modulus)
-        else:
-            return "synthesize"
-    elif pauli_bit_1.commutes(pauli_bit_2):
-        return "commute"
-    else:
-        return "anti-commute"
-
-
-def zhang_optimization(pauli_bit_data_lst: List[PauliBit]):
-    # ここに入ってくるdataはどれもcommuteするような集合。欲しいのはClifford(clifford_circuit)とnon-Cliffordの列(optimized_rotations)
-
-    rots = synthesize_sequence(pauli_bit_data_lst)
-    clifford_gate_sequence, optimized_rotations = separate_clifford_and_rotation(rots)
-
-    return optimized_rotations, clifford_gate_sequence
-
-
-def loop_optimization(pauli_bit_list, show_log=True):
-    flag = True
-    length = len(pauli_bit_list)
-    initial_length = length
-    clifford_data = []
-    k = 0
-    while flag:
-        updated_rots = []
-        grouping_data = grouping(pauli_bit_list)
-        non_clifford_rots_group, extracted_clifford_group = [], []
-        for elem in grouping_data:
-            tmp = zhang_optimization(elem)
-            non_clifford_rots_group.append(tmp[0])
-            extracted_clifford_group.append(tmp[1])
-        if (
-            sum(non_clifford_rots_group, []) != []
-        ):  # Cliffordを外側に移すためにnon-Cliffordをupdate
-            for i in range(len(non_clifford_rots_group)):
-                clifford_seq = extracted_clifford_group[i]
-                if len(clifford_seq) > 0 and len(updated_rots) > 0:
-                    updated_rots = [
-                        ele.clifford_update(clifford_gate_sequence=clifford_seq)
-                        for ele in updated_rots
-                    ]
-                    updated_rots += non_clifford_rots_group[i]
-                    clifford_data += clifford_seq
-                else:
-                    updated_rots += non_clifford_rots_group[i]
-                    clifford_data += clifford_seq
-        else:  # non-Cliffordがの個数が0になり、Cliffordだけが残っている場合
-            for clifford in extracted_clifford_group:
-                clifford_data += clifford
-        if len(updated_rots) < length:
-            k += 1
-            length = len(updated_rots)
-            pauli_bit_list = updated_rots
-        else:
-            if show_log and k > 0:
-                print("=" * 40)
-                print(f"{k}-iteration optimization applied!")
-                print(f"optimization result: {initial_length} -> {len(updated_rots)}")
-                print("=" * 40)
-            flag = False
-    return clifford_data, updated_rots
 
 
 def set_clifford_to_qulacs(qulacs_circuit, data_lst):

@@ -71,7 +71,7 @@ def equivalence_check_via_mqt_qcec(
         os.remove(circuit_2)
     if show_log:
         print(result.name)
-    return result.name in {"equivalent", "equivalent_up_to_global_phase"}
+    return result.name in {"equivalent", "equivalent_up_to_global_phase", "probably_equivalent"}
 
 
 def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
