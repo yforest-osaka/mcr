@@ -7,9 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from mcr.gate_apply import PauliBit
 from mcr.rotation_circuit import load_circuit_from_txt
-from mcr.mcr_optimize import full_optimization
+from mcr.mcr_optimize import full_optimization, output_opt_qasm_file
 import os
-from mcr.mcr_optimize import output_opt_qasm_file
 
 
 def benchmark(nqubits, with_swap):
