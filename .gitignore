@@ -5,3 +5,9 @@
 .*qasm
 .*pickle
 tmp/*
+analysis.ipynb
+test.py
+conventional_1D.py
+conventional_2D.py
+sample.txt
+mcr_compiler/hamiltonian.ipynb

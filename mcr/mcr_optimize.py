@@ -99,9 +99,7 @@ def find_nontrivial_swap(
         return None
     for l_idx, pauli_A in enumerate(left_bits):
         angle_a = pauli_A.get_angle()
-        parity_lst = [
-            pauli_A.commutes(pb) for pb in center_bits
-        ]  # {A, B}, {A, C}
+        parity_lst = [pauli_A.commutes(pb) for pb in center_bits]  # {A, B}, {A, C}
         if any(parity_lst):
             continue
         coef_abc, pat_abc = multiply_all([pauli_A, pauli_B, pauli_C])
@@ -218,16 +216,22 @@ def separate_clifford_and_rotation(pauli_bit_data_lst):
             clifford_gates += elem.get_clifford_gate_sequence()
         else:
             angle = elem.get_angle()
-            if angle > np.pi or angle < -np.pi:
-                if angle > 0:
-                    residue_angle = angle - np.pi
-                else:
-                    residue_angle = angle + np.pi
+            angle = (angle + np.pi) % (2 * np.pi) - np.pi  # normalize to [-pi, pi]
+            if np.isclose(angle, np.pi) or np.isclose(angle, -np.pi):  # Pauli
                 clifford_gates += PauliBit(
                     elem.get_pauli_str(), np.pi
                 ).get_clifford_gate_sequence()
-                rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
-            elif angle > np.pi / 2:
+            elif np.isclose(angle, np.pi / 2):  # Clifford
+                clifford_gates += PauliBit(
+                    elem.get_pauli_str(), np.pi / 2
+                ).get_clifford_gate_sequence()
+            elif np.isclose(angle, -np.pi / 2):  # Clifford
+                clifford_gates += PauliBit(
+                    elem.get_pauli_str(), -np.pi / 2
+                ).get_clifford_gate_sequence()
+            elif np.isclose(angle, 0):  # Identity
+                continue
+            elif angle > np.pi / 2:  # Clifford + non-Clifford
                 assert angle < np.pi, f"Angle {angle} exceeds expected range"
                 residue_angle = angle - np.pi / 2
                 clifford_gates += PauliBit(
@@ -241,8 +245,33 @@ def separate_clifford_and_rotation(pauli_bit_data_lst):
                     elem.get_pauli_str(), -np.pi / 2
                 ).get_clifford_gate_sequence()
                 rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
-            else:
+            else:  # non-Clifford
                 rotation_gates.append(elem)
+            # if angle > np.pi or angle < -np.pi:
+            #     if angle > 0:
+            #         residue_angle = angle - np.pi
+            #     else:
+            #         residue_angle = angle + np.pi
+            #     clifford_gates += PauliBit(
+            #         elem.get_pauli_str(), np.pi
+            #     ).get_clifford_gate_sequence()
+            #     rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+            # elif angle > np.pi / 2:
+            #     assert angle < np.pi, f"Angle {angle} exceeds expected range"
+            #     residue_angle = angle - np.pi / 2
+            #     clifford_gates += PauliBit(
+            #         elem.get_pauli_str(), np.pi / 2
+            #     ).get_clifford_gate_sequence()
+            #     rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+            # elif angle < -np.pi / 2:
+            #     assert angle > -np.pi, f"Angle {angle} exceeds expected range"
+            #     residue_angle = angle + np.pi / 2
+            #     clifford_gates += PauliBit(
+            #         elem.get_pauli_str(), -np.pi / 2
+            #     ).get_clifford_gate_sequence()
+            #     rotation_gates.append(PauliBit(elem.get_pauli_str(), residue_angle))
+            # else:
+            #     rotation_gates.append(elem)
     return clifford_gates, rotation_gates
 
 
@@ -267,6 +296,7 @@ def zhang_optimization(pauli_bit_data_lst: List[PauliBit]):
     clifford_gate_sequence, optimized_rotations = separate_clifford_and_rotation(rots)
 
     return optimized_rotations, clifford_gate_sequence
+
 
 def loop_optimization(pauli_bit_list, show_log=True, reverse_input=False):
     flag = True
@@ -339,9 +369,7 @@ def mcr_swap(pauli_bit_groups, with_mcr_index=False, show_log=False):
                 results.add(i)
                 data[i] = swappable_check[0]
                 data[i + 1] = swappable_check[1]
-                if (
-                    len(data[i + 1]) >= 3 and len(grouping(data[i + 1])) >= 2
-                ):
+                if len(data[i + 1]) >= 3 and len(grouping(data[i + 1])) >= 2:
                     remove_index_set.add(i + 1)
                 elif i < len(data) - 2 and have_common_pauli_str(
                     data[i + 1], data[i + 2]
@@ -409,7 +437,9 @@ def three_layer_nontrivial_swap(pauli_bit_groups, with_mcr_index=False):
     return sum(pauli_bit_groups, [])
 
 
-def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False, reverse_input=False):
+def optimize_data_loop(
+    pauli_bit_lst, max_attempts=1, show_opt_log=False, reverse_input=False
+):
     clifford_lst = []
     if contains_list(pauli_bit_lst):
         skip_grouping = True
@@ -424,28 +454,27 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False, revers
     iteration = 1
     if not skip_grouping:
         data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
-        clifford_1, data = loop_optimization(data, show_log=False, reverse_input=reverse_input)
+        clifford_1, data = loop_optimization(
+            data, show_log=False, reverse_input=reverse_input
+        )
         clifford_lst.extend(clifford_1)
     if len(data) == 0:
         if show_opt_log:
             print(f"🎉 Optimization success: {current_length} → {len(data)}")
         return clifford_lst, data
 
-    # while attempts_left > 0 and current_length > 0:
-    # while attempts_left > 0 and current_length > 1:  # 一時的に変更!!
-    for j in range(3): # ここの回数って何回が最適？
+    for j in range(3):
         original_data = deepcopy(data)
-        if (
-            skip_grouping and iteration == 1
-        ):  # あえてIdentityを挿入しているケースの場合は初回だけgroupingを行わない
+        if skip_grouping and iteration == 1:
             mcr_swapped_data = mcr_swap(pauli_bit_lst, show_log=False)
         else:
             mcr_swapped_data = mcr_swap(grouping(data))
         clifford_2, data = loop_optimization(mcr_swapped_data, show_log=False)
         clifford_lst.extend(clifford_2)
-        #!追加してみる
         data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
-        clifford_1, data = loop_optimization(data, show_log=False, reverse_input=reverse_input)
+        clifford_1, data = loop_optimization(
+            data, show_log=False, reverse_input=reverse_input
+        )
         clifford_lst.extend(clifford_1)
 
         if len(data) >= current_length:
@@ -467,7 +496,6 @@ def optimize_data_loop(pauli_bit_lst, max_attempts=1, show_opt_log=False, revers
 
 
 def attempt_mcr_retry(non_clifford_pauli_lst, reverse_input=False):
-
     grouped_data = grouping(non_clifford_pauli_lst, reverse_input=reverse_input)
 
     for idx, group in enumerate(grouped_data[:-1]):
@@ -505,7 +533,7 @@ def full_optimization(data, max_iter=3, show_opt_log=False):
         )
         final_clifford_lst.extend(clifford_lst)
 
-        if len(optimized_data) <= 1: # Achieved optimality
+        if len(optimized_data) <= 1:  # Achieved optimality
             return final_clifford_lst, optimized_data
 
         if show_opt_log:
@@ -530,6 +558,7 @@ def full_optimization(data, max_iter=3, show_opt_log=False):
                     )
                 return final_clifford_lst, old_optimized_data
     return final_clifford_lst, new_optimized_data
+
 
 def clifford_lst_to_qasm(clifford_lst: List[Tuple[str, Tuple[int]]], filepath: str):
     data_for_qasm = []

@@ -71,7 +71,11 @@ def equivalence_check_via_mqt_qcec(
         os.remove(circuit_2)
     if show_log:
         print(result.name)
-    return result.name in {"equivalent", "equivalent_up_to_global_phase", "probably_equivalent"}
+    return result.name in {
+        "equivalent",
+        "equivalent_up_to_global_phase",
+        "probably_equivalent",
+    }
 
 
 def pauli_bit_equivalence_check(pauli_bit_lst_1, pauli_bit_lst_2):
@@ -113,7 +117,7 @@ def equiv(seq_1: list, seq_2: list):
         nqubits = len(non_clifford_pauli_bits_1[0].get_pauli_str())
     else:
         nqubits = len(non_clifford_pauli_bits_2[0].get_pauli_str())
-    if nqubits > 10:
+    if nqubits > 25:
         return True
     circuit_1, circuit_2 = QuantumCircuit(nqubits), QuantumCircuit(nqubits)
     if len(clifford_lst_1) > 0:
