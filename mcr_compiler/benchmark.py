@@ -8,6 +8,7 @@ from tqdm import tqdm
 from mcr.gate_apply import PauliBit
 from mcr.rotation_circuit import load_circuit_from_txt
 from mcr.mcr_optimize import full_optimization, output_opt_qasm_file
+from mcr.equiv_check import equivalence_check_via_mqt_qcec
 import os
 
 
@@ -36,10 +37,12 @@ def benchmark(nqubits, with_swap):
                 data_input.append(PauliBit(pauli_str, -np.pi / 4))
         tcount_lst_before.append(len(data_input))
         start = time()
-        clifford_lst, non_clifford_lst = full_optimization(
-            circuit, show_opt_log=False, max_iter=nqubits
-        )
+        clifford_lst, non_clifford_lst = full_optimization(circuit, show_opt_log=False)
         output_opt_qasm_file(clifford_lst, non_clifford_lst, nqubits, tmp_filepath)
+        # circuit.save_qasm("sample.qasm")
+        # assert equivalence_check_via_mqt_qcec(
+        #     "sample.qasm", tmp_filepath, exclude_zx_checker=True
+        # ), "Equivalence check failed!"
         end = time()
         tcount_lst_after.append(len(non_clifford_lst))
         time_lst.append(end - start)
@@ -49,7 +52,7 @@ def benchmark(nqubits, with_swap):
 
 def main():
     nqubit_lst = [i for i in range(2, 10)]
-    swap_option = False
+    swap_option = True
 
     tcount_result_before, tcount_result_after, time_result, reduction_rates = (
         pd.DataFrame(),

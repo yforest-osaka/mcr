@@ -48,25 +48,27 @@ def find_mcr(
                             continue
 
                         if target_sign == sgn:  # D = ABC
-                            new_left = left_bits.copy()
-                            new_right = right_bits.copy()
-                            new_left.pop(j)
-                            new_left.pop(i)
-                            angle = pauli_A.get_angle()
-                            pat_A = pauli_A.get_pauli_str()
-                            additional_clifford = PauliBit(pat_A, 2 * angle)
-                            new_left += [additional_clifford, pauli_C, target]
-                            new_right.pop(l)
-                            new_right.pop(k)
+                            # 消してみる
+                            # new_left = left_bits.copy()
+                            # new_right = right_bits.copy()
+                            # new_left.pop(j)
+                            # new_left.pop(i)
+                            # angle = pauli_A.get_angle()
+                            # pat_A = pauli_A.get_pauli_str()
+                            # additional_clifford = PauliBit(pat_A, 2 * angle)
+                            # new_left += [additional_clifford, pauli_C, target]
+                            # new_right.pop(l)
+                            # new_right.pop(k)
 
-                            return (
-                                new_left,
-                                [
-                                    PauliBit(pat_A, -1 * angle),
-                                    pauli_B,
-                                ]
-                                + new_right,
-                            )
+                            # return (
+                            #     new_left,
+                            #     [
+                            #         PauliBit(pat_A, -1 * angle),
+                            #         pauli_B,
+                            #     ]
+                            #     + new_right,
+                            # )
+                            continue
                         else:
                             assert target_sign + sgn == 1, (
                                 "Sign mismatch"
@@ -135,18 +137,19 @@ def find_nontrivial_swap(
                         center_bits,
                         [pauli_A] + right_bits,
                     )
-                else:
-                    assert sgn + sign_d == 1, "Sign mismatch"
-                    left_bits.pop(l_idx)
-                    right_bits.pop(r_idx)
-                    angle_a = pauli_A.get_angle()
-                    pat_A = pauli_A.get_pauli_str()
-                    new_left = left_bits + [
-                        PauliBit(pat_A, 2 * angle_a),
-                        pauli_D,
-                    ]
-                    new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
-                    return new_left, center_bits, new_right
+                # 消してみる
+                # else:
+                #     assert sgn + sign_d == 1, "Sign mismatch"
+                #     left_bits.pop(l_idx)
+                #     right_bits.pop(r_idx)
+                #     angle_a = pauli_A.get_angle()
+                #     pat_A = pauli_A.get_pauli_str()
+                #     new_left = left_bits + [
+                #         PauliBit(pat_A, 2 * angle_a),
+                #         pauli_D,
+                #     ]
+                #     new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
+                #     return new_left, center_bits, new_right
     return None
 
 
@@ -437,9 +440,7 @@ def three_layer_nontrivial_swap(pauli_bit_groups, with_mcr_index=False):
     return sum(pauli_bit_groups, [])
 
 
-def optimize_data_loop(
-    pauli_bit_lst, max_attempts=1, show_opt_log=False, reverse_input=False
-):
+def optimize_data_loop(pauli_bit_lst, show_opt_log=False, reverse_input=False):
     clifford_lst = []
     if contains_list(pauli_bit_lst):
         skip_grouping = True
@@ -449,21 +450,18 @@ def optimize_data_loop(
         data = deepcopy(pauli_bit_lst)
     tmp1 = deepcopy(data)
 
-    attempts_left = max_attempts
+    attempts_left = 3
     current_length = len(data)
     iteration = 1
-    if not skip_grouping:
-        data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
-        clifford_1, data = loop_optimization(
-            data, show_log=False, reverse_input=reverse_input
-        )
-        clifford_lst.extend(clifford_1)
-    if len(data) == 0:
-        if show_opt_log:
-            print(f"🎉 Optimization success: {current_length} → {len(data)}")
-        return clifford_lst, data
+    # if not skip_grouping:
+    #     data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
+    #     clifford_1, data = loop_optimization(
+    #         data, show_log=False, reverse_input=reverse_input
+    #     )
+    #     clifford_lst.extend(clifford_1)
 
-    for j in range(3):
+    # for _ in range(2 * max_attempts):
+    while attempts_left > 0:
         original_data = deepcopy(data)
         if skip_grouping and iteration == 1:
             mcr_swapped_data = mcr_swap(pauli_bit_lst, show_log=False)
@@ -478,7 +476,7 @@ def optimize_data_loop(
         clifford_lst.extend(clifford_1)
 
         if len(data) >= current_length:
-            # attempts_left -= 1
+            attempts_left -= 1
             if show_opt_log:
                 print(
                     f"🔍 No optimization in iteration {iteration}: {current_length} → {len(data)}"
@@ -511,7 +509,7 @@ def attempt_mcr_retry(non_clifford_pauli_lst, reverse_input=False):
     return grouped_data
 
 
-def full_optimization(data, max_iter=3, show_opt_log=False):
+def full_optimization(data, max_iter=1, show_opt_log=False):
     final_clifford_lst = []
     initial = deepcopy(data)
     if isinstance(data, PauliRotationSequence):
@@ -525,39 +523,30 @@ def full_optimization(data, max_iter=3, show_opt_log=False):
                 assert sgn == "-", f"Unexpected sign: {sgn}"
                 result.append(PauliBit(pauli_str, -np.pi / 4))
         data = result
-    for k in range(max_iter):
-        if show_opt_log:
-            print(f"🔁 Optimization iteration: {k + 1} / {max_iter}")
-        clifford_lst, optimized_data = optimize_data_loop(
-            data, show_opt_log=show_opt_log, reverse_input=False
-        )
-        final_clifford_lst.extend(clifford_lst)
+    clifford_lst, optimized_data = optimize_data_loop(
+        data, show_opt_log=show_opt_log, reverse_input=False
+    )
+    final_clifford_lst.extend(clifford_lst)
 
-        if len(optimized_data) <= 1:  # Achieved optimality
-            return final_clifford_lst, optimized_data
+    if len(optimized_data) <= 1:  # Achieved optimality
+        return final_clifford_lst, optimized_data
+    old_optimized_data = deepcopy(optimized_data)
+    redundant_data = attempt_mcr_retry(optimized_data, reverse_input=False)
+    new_clifford_lst, new_optimized_data = optimize_data_loop(
+        redundant_data,
+        show_opt_log=show_opt_log,
+        reverse_input=False,
+    )
 
-        if show_opt_log:
-            print(f"⚙️  Additional optimization: {k + 1} / {max_iter}")
-        old_optimized_data = deepcopy(optimized_data)
-        redundant_data = attempt_mcr_retry(optimized_data, reverse_input=False)
-        new_clifford_lst, new_optimized_data = optimize_data_loop(
-            redundant_data, show_opt_log=show_opt_log, reverse_input=False
-        )
-
-        if len(new_optimized_data) <= 1:  # Achieved optimality
+    if len(new_optimized_data) <= 1:  # Achieved optimality
+        final_clifford_lst.extend(new_clifford_lst)
+        return final_clifford_lst, new_optimized_data
+    else:
+        if len(new_optimized_data) <= len(old_optimized_data):
             final_clifford_lst.extend(new_clifford_lst)
             return final_clifford_lst, new_optimized_data
         else:
-            if len(new_optimized_data) <= len(old_optimized_data):
-                final_clifford_lst.extend(new_clifford_lst)
-                data = deepcopy(new_optimized_data)  # update data for next iteration
-            else:
-                if show_opt_log:
-                    print(
-                        f"❗️ Additional optimization did not improve the result, stopping: {k + 1} / {max_iter}"
-                    )
-                return final_clifford_lst, old_optimized_data
-    return final_clifford_lst, new_optimized_data
+            return final_clifford_lst, old_optimized_data
 
 
 def clifford_lst_to_qasm(clifford_lst: List[Tuple[str, Tuple[int]]], filepath: str):
