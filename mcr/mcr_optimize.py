@@ -448,17 +448,16 @@ def optimize_data_loop(pauli_bit_lst, show_opt_log=False, reverse_input=False):
     else:
         skip_grouping = False
         data = deepcopy(pauli_bit_lst)
-    tmp1 = deepcopy(data)
 
     attempts_left = 3
     current_length = len(data)
     iteration = 1
-    # if not skip_grouping:
-    #     data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
-    #     clifford_1, data = loop_optimization(
-    #         data, show_log=False, reverse_input=reverse_input
-    #     )
-    #     clifford_lst.extend(clifford_1)
+    if not skip_grouping:
+        data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
+        clifford_1, data = loop_optimization(
+            data, show_log=False, reverse_input=reverse_input
+        )
+        clifford_lst.extend(clifford_1)
 
     # for _ in range(2 * max_attempts):
     while attempts_left > 0:
@@ -509,9 +508,8 @@ def attempt_mcr_retry(non_clifford_pauli_lst, reverse_input=False):
     return grouped_data
 
 
-def full_optimization(data, max_iter=1, show_opt_log=False):
+def full_optimization(data, show_opt_log=False):
     final_clifford_lst = []
-    initial = deepcopy(data)
     if isinstance(data, PauliRotationSequence):
         result = []
         for elem in data.get_all():
@@ -538,15 +536,11 @@ def full_optimization(data, max_iter=1, show_opt_log=False):
         reverse_input=False,
     )
 
-    if len(new_optimized_data) <= 1:  # Achieved optimality
+    if len(new_optimized_data) <= len(old_optimized_data):
         final_clifford_lst.extend(new_clifford_lst)
         return final_clifford_lst, new_optimized_data
     else:
-        if len(new_optimized_data) <= len(old_optimized_data):
-            final_clifford_lst.extend(new_clifford_lst)
-            return final_clifford_lst, new_optimized_data
-        else:
-            return final_clifford_lst, old_optimized_data
+        return final_clifford_lst, old_optimized_data
 
 
 def clifford_lst_to_qasm(clifford_lst: List[Tuple[str, Tuple[int]]], filepath: str):

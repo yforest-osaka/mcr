@@ -76,9 +76,7 @@ def process(nqubits, iteration):
             data_input.append(PauliBit(pauli_str, -np.pi / 4))
     print(f"Original circuit has {len(data_input)} non-Clifford gates.")
     st = time()
-    clifford_lst, non_clifford_lst = full_optimization(
-        circuit, show_opt_log=False, max_iter=nqubits
-    )
+    clifford_lst, non_clifford_lst = full_optimization(circuit, show_opt_log=False)
     print(
         f"Optimized circuit has {len(non_clifford_lst)} non-Clifford gates. Time: {time() - st:.5f} seconds"
     )
