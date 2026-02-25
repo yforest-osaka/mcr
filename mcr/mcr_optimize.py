@@ -137,19 +137,19 @@ def find_nontrivial_swap(
                         center_bits,
                         [pauli_A] + right_bits,
                     )
-                # 消してみる
-                # else:
-                #     assert sgn + sign_d == 1, "Sign mismatch"
-                #     left_bits.pop(l_idx)
-                #     right_bits.pop(r_idx)
-                #     angle_a = pauli_A.get_angle()
-                #     pat_A = pauli_A.get_pauli_str()
-                #     new_left = left_bits + [
-                #         PauliBit(pat_A, 2 * angle_a),
-                #         pauli_D,
-                #     ]
-                #     new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
-                #     return new_left, center_bits, new_right
+                else:
+                    # assert sgn + sign_d == 1, "Sign mismatch"
+                    # left_bits.pop(l_idx)
+                    # right_bits.pop(r_idx)
+                    # angle_a = pauli_A.get_angle()
+                    # pat_A = pauli_A.get_pauli_str()
+                    # new_left = left_bits + [
+                    #     PauliBit(pat_A, 2 * angle_a),
+                    #     pauli_D,
+                    # ]
+                    # new_right = [PauliBit(pat_A, -1 * angle_a)] + right_bits
+                    # return new_left, center_bits, new_right
+                    continue
     return None
 
 
@@ -440,7 +440,9 @@ def three_layer_nontrivial_swap(pauli_bit_groups, with_mcr_index=False):
     return sum(pauli_bit_groups, [])
 
 
-def optimize_data_loop(pauli_bit_lst, show_opt_log=False, reverse_input=False):
+def optimize_data_loop(
+    pauli_bit_lst, max_iter=10, show_opt_log=False, reverse_input=False
+):
     clifford_lst = []
     if contains_list(pauli_bit_lst):
         skip_grouping = True
@@ -449,20 +451,20 @@ def optimize_data_loop(pauli_bit_lst, show_opt_log=False, reverse_input=False):
         skip_grouping = False
         data = deepcopy(pauli_bit_lst)
 
-    attempts_left = 3
+    attempts_left = max_iter
     current_length = len(data)
     iteration = 1
-    if not skip_grouping:
-        data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
-        clifford_1, data = loop_optimization(
-            data, show_log=False, reverse_input=reverse_input
-        )
-        clifford_lst.extend(clifford_1)
+    # if not skip_grouping:
+    #     data = three_layer_nontrivial_swap(grouping(data, reverse_input=reverse_input))
+    #     clifford_1, data = loop_optimization(
+    #         data, show_log=False, reverse_input=reverse_input
+    #     )
+    #     clifford_lst.extend(clifford_1)
 
     # for _ in range(2 * max_attempts):
     while attempts_left > 0:
         original_data = deepcopy(data)
-        if skip_grouping and iteration == 1:
+        if contains_list(data):
             mcr_swapped_data = mcr_swap(pauli_bit_lst, show_log=False)
         else:
             mcr_swapped_data = mcr_swap(grouping(data))
@@ -508,7 +510,7 @@ def attempt_mcr_retry(non_clifford_pauli_lst, reverse_input=False):
     return grouped_data
 
 
-def full_optimization(data, show_opt_log=False):
+def full_optimization(data, max_iter, show_opt_log=False):
     final_clifford_lst = []
     if isinstance(data, PauliRotationSequence):
         result = []
@@ -522,7 +524,7 @@ def full_optimization(data, show_opt_log=False):
                 result.append(PauliBit(pauli_str, -np.pi / 4))
         data = result
     clifford_lst, optimized_data = optimize_data_loop(
-        data, show_opt_log=show_opt_log, reverse_input=False
+        data, show_opt_log=show_opt_log, reverse_input=False, max_iter=max_iter
     )
     final_clifford_lst.extend(clifford_lst)
 
@@ -534,6 +536,7 @@ def full_optimization(data, show_opt_log=False):
         redundant_data,
         show_opt_log=show_opt_log,
         reverse_input=False,
+        max_iter=max_iter,
     )
 
     if len(new_optimized_data) <= len(old_optimized_data):

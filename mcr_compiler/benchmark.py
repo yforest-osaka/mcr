@@ -37,7 +37,9 @@ def benchmark(nqubits, with_swap):
                 data_input.append(PauliBit(pauli_str, -np.pi / 4))
         tcount_lst_before.append(len(data_input))
         start = time()
-        clifford_lst, non_clifford_lst = full_optimization(circuit, show_opt_log=False)
+        clifford_lst, non_clifford_lst = full_optimization(
+            circuit, max_iter=2 * nqubits, show_opt_log=False
+        )
         output_opt_qasm_file(clifford_lst, non_clifford_lst, nqubits, tmp_filepath)
         # circuit.save_qasm("sample.qasm")
         # assert equivalence_check_via_mqt_qcec(
@@ -52,7 +54,7 @@ def benchmark(nqubits, with_swap):
 
 def main():
     nqubit_lst = [i for i in range(2, 10)]
-    swap_option = True
+    swap_option = False
 
     tcount_result_before, tcount_result_after, time_result, reduction_rates = (
         pd.DataFrame(),
