@@ -5,6 +5,7 @@
 .*qasm
 .*pickle
 tmp/*
+tmp.ipynb
 analysis.ipynb
 test.py
 conventional_1D.py

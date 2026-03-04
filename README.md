@@ -41,3 +41,5 @@ Now your environment is ready for running all compiler benchmarks.
 ## Executing Compiler Benchmarks
 
 For detailed usage instructions, please refer to the `0_main.ipynb` notebook included in the repository.
+
+Additionally, `mcr_compiler` folder contains `benchmark.py`, which includes code for running benchmarks using the `MCR Compiler`, specifically for unoptimization-based datasets and spin dynamics of XY model circuits.
